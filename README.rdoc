@@ -1,19 +1,108 @@
-= mongoid_taggable_with_type
+h1. Mongoid Taggable With Type
 
-Description goes here.
+This is heavily borrowed from Mongoid Taggable
 
-== Contributing to mongoid_taggable_with_type
- 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
-* Fork the project
-* Start a feature/bugfix branch
-* Commit and push until you are happy with your contribution
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+Mongoid Taggable provides some helpers to create taggable documents.
 
-== Copyright
+h2. Installation
 
-Copyright (c) 2011 Aaron Qian. See LICENSE.txt for
-further details.
+You can simply install from rubygems:
+
+bc. gem install mongoid_taggable_with_type
+
+or in Gemfile:
+
+bc. gem 'mongoid_taggable_with_type'
+
+h2. Basic Usage
+
+To make a document taggable you need to include Mongoid::Taggable into your document and call the @taggable@ macro with optional arguments:
+
+bc.. class Post
+  include Mongoid::Document
+  include Mongoid::TaggableWithType
+  
+  field :title
+  field :content
+
+  taggable # default field is tags
+  taggable :artists # add fields for tagging artists (context)
+  taggable :types, :separator => ',' , :aggregation => false # using comma as separator and no aggregation 
+end
+
+p. Then in your form, for example:
+
+bc.. <% form_for @post do |f| %>
+  <p>
+    <%= f.label :title %><br />
+    <%= f.text_field :title %>
+  </p>
+  <p>
+    <%= f.label :content %><br />
+    <%= f.text_area :content %>
+  </p>
+  <p>
+    <%= f.label :tags %><br />
+    <%= text_field_tag 'post[tags]' %>
+  </p>
+  <p>
+    <%= f.label :artists %><br />
+    <%= text_field_tag 'post[artists]' %>
+  </p>
+  <p>
+    <%= f.label :types %><br />
+    <%= text_field_tag 'post[types]' %>
+  </p>
+  <p>
+    <button type="submit">Send</button>
+  </p>
+<% end %>
+
+p. You can of course use helpers or a @FormBuilder@ extension to express this in a prettier way. In this case, the text field for tags should receive the list of tags separated by space (below in this document you will see how to change the separator).
+
+p. Your document will have a custom @tags=@ setter which can accept separator-delineated String. Your document will also have a custom @tags_array=@ setter that accepts an array of strings.
+
+h2. Tag Aggregation with Counts
+
+This lib can automatically create an aggregate collection of tags and their counts for you, updated as documents are saved. This is useful for getting a list of all tags used in documents of this collection or to create a tag cloud. This is disabled by default for sake of performance where it is unneeded -- see the following example to understand how to use it:
+
+bc.. class Post
+  include Mongoid::Document
+  include Mongoid::Taggable
+
+  field :title
+  field :content
+
+  taggable :aggregation => true # default is true
+end
+
+Post.create!(:tags => "food,ant,bee")
+Post.create!(:tags => "juice,food,bee,zip")
+Post.create!(:tags => "honey,strip,food")
+
+Post.tags # will retrieve ["ant", "bee", "food", "honey", "juice", "strip", "zip"]
+Post.tags_with_weight # will retrieve:
+# [
+#   ['ant', 1],
+#   ['bee', 2],
+#   ['food', 3],
+#   ['honey', 1],
+#   ['juice', 1],
+#   ['strip', 1],
+#   ['zip', 1]
+# ]
+
+h2. Changing default separator
+
+To change the default separator you may pass a @separator@ argument to the macro:
+
+bc.. class Post
+  include Mongoid::Document
+  include Mongoid::Taggable
+
+  field :title
+  field :content
+
+  taggable :separator => ','    # tags will be delineated by comma
+end
 

@@ -15,14 +15,14 @@ Jeweler::Tasks.new do |gem|
   gem.name = "mongoid_taggable_with_type"
   gem.homepage = "http://github.com/aq1018/mongoid_taggable_with_type"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Mongoid taggable behaviour}
+  gem.description = %Q{It provides some helpers to create taggable documents with context.}
   gem.email = "aq1018@gmail.com"
   gem.authors = ["Aaron Qian"]
-  # Include your dependencies below. Runtime dependencies are required when using your gem,
-  # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
-  #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
-  #  gem.add_development_dependency 'rspec', '> 1.2.3'
+  gem.add_runtime_dependency 'mongoid', '~> 2.0.0.beta.20'
+  #gem.add_development_dependency 'database_cleaner', '~> 0.6.0'
+  #gem.add_development_dependency 'rake',  '~> 0.8.7'
+  #gem.add_development_dependency 'rspec', '~> 2.1.0'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
