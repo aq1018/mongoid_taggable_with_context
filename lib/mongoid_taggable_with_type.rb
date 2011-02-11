@@ -72,36 +72,36 @@ module Mongoid::TaggableWithType
       END
       
       # singleton methods
-      class < self
-        class_eval <<-END
+      class_eval <<-END
+        class << self
           # Collection name for storing results of tag count aggregation
           def #{tags_field}_aggregation_collection
             @#{tags_field}_aggregation_collection ||= "#{collection_name}_#{tags_field}_aggregation"
           end
-      
+    
           def #{tags_field}
             db.collection(#{tags_field}_aggregation_collection).find.to_a.map{ |r| r["_id"] }
           end
-        
+      
           # retrieve the list of tag with weight(count), this is useful for
           # creating tag clouds
           def #{tags_field}_with_weight
             db.collection(#{tags_field}_aggregation_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
           end
-        
+      
           # Predicate for whether or not map/reduce aggregation is enabled
           def aggregate_#{tags_field}?
             !!taggable_with_type_options[:#{tags_field}][:aggregation]
           end
-          
+        
           def #{tags_field}_seperator
-            taggable_with_type_options[:#{tags_field}][:seperator]
+            taggable_with_type_options[:#{tags_field}][:separator]
           end
-          
+        
           def #{tags_field}_default_type
             taggable_with_type_options[:#{tags_field}][:default_type]
           end
-                    
+                  
           # Find documents tagged with all tags passed as a parameter, given
           # as an Array or a String using the configured separator.
           #
@@ -117,22 +117,32 @@ module Mongoid::TaggableWithType
             tags = convert_string_#{tags_field}_to_array(tags) if tags.is_a? String
             criteria.all_in(:#{tags_field} => tags)
           end
-          
+        
           private
           # Helper method to convert a String to an Array based on the
           # configured tag separator.
           def convert_string_#{tags_field}_to_array(s)
             (s).split(#{tags_field}_seperator).map(&:strip)
           end
-          
+        
           def convert_array_#{tags_field}_to_string(a)
             a.join(#{tags_field}_seperator)
           end
-        END
-      end
+        end
+      END
       
       # instance methods
       class_eval <<-END
+        def #{tags_field}=(s)
+          super
+          write_attribute(:#{tags_array_field}, convert_string_#{tags_field}_to_array(s))
+        end
+        
+        def #{tags_array_field}=(a)
+          super
+          write_attribute(:#{tags_field}, convert_array_#{tags_field}_to_string(a))
+        end
+        
         private
         
         # Execute map/reduce operation to aggregate tag counts for document
@@ -169,20 +179,8 @@ module Mongoid::TaggableWithType
           self.class.aggregate_#{tags_field}? &&          # check for blank? is needed to take account of new records
             previous_changes.include?('#{tags_field}') || previous_changes.blank?
         end
-        
-        def #{tags_field}=(s)
-          super
-          write_attribute(:#{tags_array_field}, convert_string_#{tags_field}_to_array(s))
-        end
-        
-        def #{tags_array_field}=(a)
-          super
-          write_attribute(:#{tags_field}, convert_array_#{tags_field}_to_string(a))
-        end
-        
       END
       
     end
   end
 end
-
