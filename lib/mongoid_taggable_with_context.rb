@@ -66,6 +66,7 @@ module Mongoid::TaggableWithContext
         delegate "convert_string_to_array", :to => 'self.class'
         delegate "convert_array_to_string", :to => 'self.class'
         delegate "tag_separator_for",       :to => 'self.class'
+        delegate "tag_contexts",            :to => 'self.class'
         
         set_callback :save,     :after, :update_tags_aggregation
         set_callback :create,   :after, :increment_tags_aggregation
