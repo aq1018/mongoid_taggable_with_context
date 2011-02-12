@@ -1,108 +1,133 @@
-h1. Mongoid Taggable With Context
+== Mongoid Taggable With Context
 
-This is heavily borrowed from Mongoid Taggable
+A tagging plugin for Mongoid that allows for custom tagging along dynamic contexts. This plugin was originally based on Mongoid Taggable by Wilker Lúcio and Ches Martin. It has evolved substantially since that point, but all credit goes to them for the initial tagging functionality.
 
-Mongoid Taggable provides some helpers to create taggable documents.
+For instance, in a social network, a user might have tags that are called skills, interests, sports, and more. There is no real way to differentiate between tags and so an implementation of this type is not possible with Mongoid Taggable.
 
-h2. Installation
+Another example, aggregation such as counting tag occurrences was achieved by map-reduce with Mongoid Taggable. It was ok for small amount of tags, but when the amount of tags and documents grow, the original Mongoid Taggable won't be able to scale to real-time statistics demand.
+
+Enter Mongoid Taggable With Context. Rather than tying functionality to a specific keyword (namely "tags"), Mongoid Taggable With Context allows you to specify an arbitrary number of tag "contexts" that can be used locally or in combination in the same way Mongoid Taggable was used.
+
+Mongoid Taggable With Context implements tag aggregation without map-reduce, instead it quickly adjusts the aggregation collection whenever tags are inserted or removed with $inc operator. So performance won't be impacted as the number of tags and documents grow.
+
+== Installation
 
 You can simply install from rubygems:
 
-bc. gem install mongoid_taggable_with_type
+  gem install mongoid_taggable_with_context
 
 or in Gemfile:
 
-bc. gem 'mongoid_taggable_with_type'
+  gem 'mongoid_taggable_with_context'
 
-h2. Basic Usage
+== Basic Usage
 
-To make a document taggable you need to include Mongoid::Taggable into your document and call the @taggable@ macro with optional arguments:
+To make a document taggable you need to include Mongoid::TaggableOnContext into your document and call the *taggable* macro with optional arguments:
 
-bc.. class Post
-  include Mongoid::Document
-  include Mongoid::TaggableWithType
-  
-  field :title
-  field :content
+  class Post
+    include Mongoid::Document
+    include Mongoid::TaggableWithContext
 
-  taggable # default field is tags
-  taggable :artists # add fields for tagging artists (context)
-  taggable :types, :separator => ',' , :aggregation => false # using comma as separator and no aggregation 
-end
+    field :title
+    field :content
 
-p. Then in your form, for example:
+    # default context is 'tags'.
+    # This creates #tags, #tags=, #tags_array, #tags_array= instance methods
+    # separator is " " by default
+    # #tags method returns space separated string
+    # #tags= methods accepts space separated string
+    # #tags_array method returns an array of tags
+    # #tags_array= method accepts an array of tags
+    # #tags and #tags_array are automatically synched.
+    taggable
+    
+    # tagging for 'interests' context.
+    # This creates #interests, #interests=, #interests_array, #interests_array= instance methods
+    taggable :interests
+    
+    # tagging for 'skills' context.
+    # This creates #skills, #skills=, #skills_array, #skills_array= instance methods
+    # changing tag separator to "," (Default is " ") 
+    taggable :skills, :separator => ','
+  end
 
-bc.. <% form_for @post do |f| %>
-  <p>
-    <%= f.label :title %><br />
-    <%= f.text_field :title %>
-  </p>
-  <p>
-    <%= f.label :content %><br />
-    <%= f.text_area :content %>
-  </p>
-  <p>
-    <%= f.label :tags %><br />
-    <%= text_field_tag 'post[tags]' %>
-  </p>
-  <p>
-    <%= f.label :artists %><br />
-    <%= text_field_tag 'post[artists]' %>
-  </p>
-  <p>
-    <%= f.label :types %><br />
-    <%= text_field_tag 'post[types]' %>
-  </p>
-  <p>
-    <button type="submit">Send</button>
-  </p>
-<% end %>
+Then in your form, for example:
 
-p. You can of course use helpers or a @FormBuilder@ extension to express this in a prettier way. In this case, the text field for tags should receive the list of tags separated by space (below in this document you will see how to change the separator).
+  <% form_for @post do |f| %>
+    <p>
+      <%= f.label :title %><br />
+      <%= f.text_field :title %>
+    </p>
+    <p>
+      <%= f.label :content %><br />
+      <%= f.text_area :content %>
+    </p>
+    <p>
+      <%= f.label :tags %><br />
+      <%= text_field_tag 'post[tags]' %>
+    </p>
+    <p>
+      <%= f.label :interests %><br />
+      <%= text_field_tag 'post[interests]' %>
+    </p>
+    <p>
+      <%= f.label :skills %><br />
+      <%= text_field_tag 'post[skills]' %>
+    </p>
+    <p>
+      <button type="submit">Send</button>
+    </p>
+  <% end %>
 
-p. Your document will have a custom @tags=@ setter which can accept separator-delineated String. Your document will also have a custom @tags_array=@ setter that accepts an array of strings.
 
-h2. Tag Aggregation with Counts
+== Tag Aggregation with Counts
 
-This lib can automatically create an aggregate collection of tags and their counts for you, updated as documents are saved. This is useful for getting a list of all tags used in documents of this collection or to create a tag cloud. This is disabled by default for sake of performance where it is unneeded -- see the following example to understand how to use it:
+This lib can automatically create aggregate collections of contexts and their counts for you. Each aggregate collection is scoped to the document collection type and context.
 
-bc.. class Post
-  include Mongoid::Document
-  include Mongoid::Taggable
+  Post.create!(:tags => "food,ant,bee")
+  Post.create!(:tags => "juice,food,bee,zip")
+  Post.create!(:tags => "honey,strip,food")
 
-  field :title
-  field :content
+  Post.tags # will retrieve ["ant", "bee", "food", "honey", "juice", "strip", "zip"]
+  Post.tags_with_weight # will retrieve:
+  # [
+  #   ['ant', 1],
+  #   ['bee', 2],
+  #   ['food', 3],
+  #   ['honey', 1],
+  #   ['juice', 1],
+  #   ['strip', 1],
+  #   ['zip', 1]
+  # ]
 
-  taggable :aggregation => true # default is true
-end
+== Changing default separator
 
-Post.create!(:tags => "food,ant,bee")
-Post.create!(:tags => "juice,food,bee,zip")
-Post.create!(:tags => "honey,strip,food")
+To change the default separator you may pass a *separator* argument to the macro:
 
-Post.tags # will retrieve ["ant", "bee", "food", "honey", "juice", "strip", "zip"]
-Post.tags_with_weight # will retrieve:
-# [
-#   ['ant', 1],
-#   ['bee', 2],
-#   ['food', 3],
-#   ['honey', 1],
-#   ['juice', 1],
-#   ['strip', 1],
-#   ['zip', 1]
-# ]
+  class Post
+    include Mongoid::Document
+    include Mongoid::Taggable
 
-h2. Changing default separator
+    field :title
+    field :content
 
-To change the default separator you may pass a @separator@ argument to the macro:
+    taggable :separator => ','    # tags will be delineated by comma instead of space
+  end
 
-bc.. class Post
-  include Mongoid::Document
-  include Mongoid::Taggable
+== Development and Testing
 
-  field :title
-  field :content
+Mongoid Taggable With Context uses Bundler for easy installation of development dependent gems.
+To get all dependent gems for development, while inside mongoid_taggable_with_context directory:
 
-  taggable :separator => ','    # tags will be delineated by comma
-end
+  bundle install
 
+
+Mongoid Taggable With Context uses RSpec for its test coverage.
+Inside mongoid_taggable_with_context directory, you can run the specs with:
+
+  rake spec
+
+To see the test coverage, you need to be on ruby 1.8.7 (since latest rcov doesn't work 1.9)
+and run the following command:
+
+  rake rcov
