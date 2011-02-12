@@ -139,7 +139,7 @@ module Mongoid::TaggableWithContext
       db.collection(aggregation_collection_for(context)).find.to_a.map{ |t| [t["_id"], t["value"]] }
     end
   
-    def tag_seperator_for(context)
+    def tag_separator_for(context)
       taggable_with_context_options[context][:separator]
     end
             
