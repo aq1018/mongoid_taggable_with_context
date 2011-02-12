@@ -65,11 +65,12 @@ module Mongoid::TaggableWithContext
       if first_invoke
         delegate "convert_string_to_array",     :to => 'self.class'
         delegate "convert_array_to_string",     :to => 'self.class'
-        delegate "tag_separator_for",           :to => 'self.class'
+        delegate "get_tag_separator_for",       :to => 'self.class'
         delegate "tag_contexts",                :to => 'self.class'
         delegate "aggregation_collection_for",  :to => 'self.class'
         delegate "tag_options_for",             :to => 'self.class'
 
+        set_callback :create,   :after, :increment_tags_agregation
         set_callback :save,     :after, :update_tags_aggregation
         set_callback :destroy,  :after, :decrement_tags_aggregation
       end
@@ -93,7 +94,11 @@ module Mongoid::TaggableWithContext
           end
       
           def #{tags_field}_separator
-            tag_separator_for(:"#{tags_field}")
+            get_tag_separator_for(:"#{tags_field}")
+          end
+          
+          def #{tags_field}_separator=(value)
+            set_tag_separator_for(:"#{tags_field}", value)
           end
                   
           def #{tags_field}_tagged_with(tags)
@@ -106,12 +111,12 @@ module Mongoid::TaggableWithContext
       class_eval <<-END
         def #{tags_field}=(s)
           super
-          write_attribute(:#{tags_array_field}, convert_string_to_array(s, tag_separator_for(:"#{tags_field}")))
+          write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
         end
         
         def #{tags_array_field}=(a)
           super
-          write_attribute(:#{tags_field}, convert_array_to_string(a, tag_separator_for(:"#{tags_field}")))
+          write_attribute(:#{tags_field}, convert_array_to_string(a, get_tag_separator_for(:"#{tags_field}")))
         end
       END
     end
@@ -131,18 +136,24 @@ module Mongoid::TaggableWithContext
       "#{collection_name}_#{context}_aggregation"
     end
 
-    def tags_for(context)
-      db.collection(aggregation_collection_for(context)).find({:value => {"$gt" => 0 }}).to_a.map{ |t| t["_id"] }
+    def tags_for(context, conditions={})
+      conditions = {:sort => '_id'}.merge(conditions)
+      db.collection(aggregation_collection_for(context)).find({:value => {"$gt" => 0 }}, conditions).to_a.map{ |t| t["_id"] }
     end
     
     # retrieve the list of tag with weight(count), this is useful for
     # creating tag clouds
-    def tags_with_weight_for(context)
-      db.collection(aggregation_collection_for(context)).find({:value => {"$gt" => 0 }}).to_a.map{ |t| [t["_id"], t["value"]] }
+    def tags_with_weight_for(context, conditions={})
+      conditions = {:sort => '_id'}.merge(conditions)
+      db.collection(aggregation_collection_for(context)).find({:value => {"$gt" => 0 }}, conditions).to_a.map{ |t| [t["_id"], t["value"]] }
     end
   
-    def tag_separator_for(context)
+    def get_tag_separator_for(context)
       taggable_with_context_options[context][:separator]
+    end
+
+    def set_tag_separator_for(context, value)
+      taggable_with_context_options[context][:separator] = value.nil? ? " " : value.to_s
     end
             
     # Find documents tagged with all tags passed as a parameter, given
@@ -164,11 +175,11 @@ module Mongoid::TaggableWithContext
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
     def convert_string_to_array(str = "", seperator = " ")
-      str.split(seperator).map(&:strip)
+      str.split(seperator).map(&:strip).uniq.compact
     end
   
     def convert_array_to_string(ary = [], seperator = " ")
-      ary.join(seperator)
+      ary.uniq.compact.join(seperator)
     end
   end
   
@@ -179,6 +190,25 @@ module Mongoid::TaggableWithContext
     
     def changed_contexts
       tag_contexts & previous_changes.keys.map(&:to_sym)
+    end
+    
+    def increment_tags_agregation
+      # if document is created by using MyDocument.new
+      # and attributes are individually assigned
+      # #previous_changes won't be empty and aggregation
+      # is updated in after_save, so we simply skip it.
+      return unless previous_changes.empty?
+      
+      # if the document is created by using MyDocument.create(:tags => "tag1 tag2")
+      # #previous_changes hash is empty and we have to update aggregation here
+      tag_contexts.each do |context|
+        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
+        field_name = self.class.tag_options_for(context)[:array_field]
+        tags = self.send field_name || []
+        tags.each do |t|
+          coll.update({:_id => t}, {'$inc' => {:value => 1}}, :upsert => true)
+        end
+      end
     end
     
     def decrement_tags_aggregation
