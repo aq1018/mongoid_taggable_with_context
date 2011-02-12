@@ -58,17 +58,19 @@ module Mongoid::TaggableWithContext
       write_inheritable_attribute(:taggable_with_context_options, class_options)
       
       # setup fields & indexes
-      field tags_field
-      field tags_array_field, :type => Array
+      field tags_field, :default => ""
+      field tags_array_field, :type => Array, :default => []
       index tags_array_field
 
       if first_invoke
-        delegate "convert_string_to_array", :to => 'self.class'
-        delegate "convert_array_to_string", :to => 'self.class'
-        delegate "tag_separator_for",       :to => 'self.class'
+        delegate "convert_string_to_array",     :to => 'self.class'
+        delegate "convert_array_to_string",     :to => 'self.class'
+        delegate "tag_separator_for",           :to => 'self.class'
+        delegate "tag_contexts",                :to => 'self.class'
+        delegate "aggregation_collection_for",  :to => 'self.class'
+        delegate "tag_options_for",             :to => 'self.class'
         
         set_callback :save,     :after, :update_tags_aggregation
-        set_callback :create,   :after, :increment_tags_aggregation
         set_callback :destroy,  :after, :decrement_tags_aggregation
       end
       
@@ -130,13 +132,13 @@ module Mongoid::TaggableWithContext
     end
 
     def tags_for(context)
-      db.collection(aggregation_collection_for(context)).find.to_a.map{ |t| t["_id"] }
+      db.collection(aggregation_collection_for(context)).find({:value => {"$gt" => 0 }}).to_a.map{ |t| t["_id"] }
     end
     
     # retrieve the list of tag with weight(count), this is useful for
     # creating tag clouds
     def tags_with_weight_for(context)
-      db.collection(aggregation_collection_for(context)).find.to_a.map{ |t| [t["_id"], t["value"]] }
+      db.collection(aggregation_collection_for(context)).find({:value => {"$gt" => 0 }}).to_a.map{ |t| [t["_id"], t["value"]] }
     end
   
     def tag_separator_for(context)
@@ -161,11 +163,11 @@ module Mongoid::TaggableWithContext
   
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
-    def convert_string_to_array(str, seperator = " ")
+    def convert_string_to_array(str = "", seperator = " ")
       str.split(seperator).map(&:strip)
     end
   
-    def convert_array_to_string(ary, seperator = " ")
+    def convert_array_to_string(ary = [], seperator = " ")
       ary.join(seperator)
     end
   end
@@ -179,24 +181,13 @@ module Mongoid::TaggableWithContext
       tag_contexts & previous_changes.keys.map(&:to_sym)
     end
     
-    def increment_tags_aggregation
-      tag_contexts.each do |context|
-        field_name = tag_options_for(context)[:array_field]
-        tags = self.send field_name
-        coll = db.collection(aggregation_collection_for(context))
-        tags.each do |t|
-          coll.update({:name => t}, {'$inc' => {:count => 1}}, :upsert => true)
-        end
-      end
-    end
-    
     def decrement_tags_aggregation
       tag_contexts.each do |context|
-        coll = db.collection(aggregation_collection_for(context))
-        field_name = tag_options_for(context)[:array_field]
-        tags = self.send field_name
+        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
+        field_name = self.class.tag_options_for(context)[:array_field]
+        tags = self.send field_name || []
         tags.each do |t|
-          coll.update({:name => t}, {'$inc' => {:count => -1}}, :upsert => true)
+          coll.update({:_id => t}, {'$inc' => {:value => -1}}, :upsert => true)
         end
       end
     end
@@ -205,8 +196,8 @@ module Mongoid::TaggableWithContext
       return unless need_update_tags_aggregation?
       
       changed_contexts.each do |context|
-        coll = db.collection(aggregation_collection_for(context))
-        field_name = tag_options_for(context)[:array_field]        
+        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
+        field_name = self.class.tag_options_for(context)[:array_field]        
         old_tags, new_tags = previous_changes["#{field_name}"]
         old_tags ||= []
         new_tags ||= []
@@ -215,11 +206,11 @@ module Mongoid::TaggableWithContext
         tags_added = new_tags - unchanged_tags
         
         tags_removed.each do |t|
-          coll.update({:name => t}, {'$inc' => {:count => -1}}, :upsert => true)
+          coll.update({:_id => t}, {'$inc' => {:value => -1}}, :upsert => true)
         end
         
         tags_added.each do |t|
-          coll.update({:name => t}, {'$inc' => {:count => 1}}, :upsert => true)
+          coll.update({:_id => t}, {'$inc' => {:value => 1}}, :upsert => true)
         end
       end
     end
