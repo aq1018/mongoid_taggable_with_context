@@ -69,7 +69,7 @@ module Mongoid::TaggableWithContext
         delegate "tag_contexts",                :to => 'self.class'
         delegate "aggregation_collection_for",  :to => 'self.class'
         delegate "tag_options_for",             :to => 'self.class'
-        
+
         set_callback :save,     :after, :update_tags_aggregation
         set_callback :destroy,  :after, :decrement_tags_aggregation
       end
