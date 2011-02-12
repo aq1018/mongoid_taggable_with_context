@@ -12,8 +12,8 @@ require 'rake'
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "mongoid_taggable_with_type"
-  gem.homepage = "http://github.com/aq1018/mongoid_taggable_with_type"
+  gem.name = "mongoid_taggable_with_context"
+  gem.homepage = "http://github.com/aq1018/mongoid_taggable_with_context"
   gem.license = "MIT"
   gem.summary = %Q{Mongoid taggable behaviour}
   gem.description = %Q{It provides some helpers to create taggable documents with context.}
@@ -47,7 +47,7 @@ Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "mongoid_taggable_with_type #{version}"
+  rdoc.title = "mongoid_taggable_with_context #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end

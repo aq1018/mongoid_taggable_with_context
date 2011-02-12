@@ -1,1 +1,1 @@
-require 'mongoid/taggable_with_type'
+require 'mongoid/taggable_with_context'

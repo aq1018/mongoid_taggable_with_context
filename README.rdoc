@@ -1,4 +1,4 @@
-h1. Mongoid Taggable With Type
+h1. Mongoid Taggable With Context
 
 This is heavily borrowed from Mongoid Taggable
 
