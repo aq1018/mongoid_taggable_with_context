@@ -218,10 +218,10 @@ describe Mongoid::TaggableWithContext do
           m2 = MyModel.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
           m3 = MyModel.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
           
-          m1.tags_array = m1.tags_array + %w[honey strip shoe]
+          m1.tags_array = m1.tags_array + %w[honey strip shoe] - %w[food]
           m1.save!
           
-          m3.artists_array = m3.artists_array + %w[grant greg gory]
+          m3.artists_array = m3.artists_array + %w[grant greg gory] - %w[andy]
           m3.save!
           
           m2.destroy
@@ -236,7 +236,7 @@ describe Mongoid::TaggableWithContext do
           MyModel.tags_with_weight.should == [
             ['ant', 1],
             ['bee', 1],
-            ['food', 2],
+            ['food', 1],
             ['honey', 2],
             ['shoe', 1],
             ['strip', 2]
@@ -244,7 +244,7 @@ describe Mongoid::TaggableWithContext do
         
           MyModel.artists_with_weight.should == [
             ['aaron', 2],
-            ['andy', 2],
+            ['andy', 1],
             ['gory', 1],
             ['grant', 1],
             ['greg', 2],
