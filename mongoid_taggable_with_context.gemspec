@@ -4,7 +4,7 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{mongoid_taggable_with_type}
+  s.name = %q{mongoid_taggable_with_context}
   s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
@@ -25,20 +25,14 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "init.rb",
-    "lib/mongoid_taggable_with_type.rb",
-    "mongoid_taggable_with_type.gemspec",
-    "test/helper.rb",
-    "test/test_mongoid_taggable_with_type.rb"
+    "lib/mongoid_taggable_with_context.rb",
+    "mongoid_taggable_with_context.gemspec"
   ]
-  s.homepage = %q{http://github.com/aq1018/mongoid_taggable_with_type}
+  s.homepage = %q{http://github.com/aq1018/mongoid_taggable_with_context}
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.5.2}
   s.summary = %q{Mongoid taggable behaviour}
-  s.test_files = [
-    "test/helper.rb",
-    "test/test_mongoid_taggable_with_type.rb"
-  ]
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
