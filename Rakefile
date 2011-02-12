@@ -32,6 +32,7 @@ end
 RSpec::Core::RakeTask.new(:rcov) do |spec|
   spec.pattern = 'spec/**/*_spec.rb'
   spec.rcov = true
+  spec.rcov_opts = "--exclude ~\/.rvm,spec"
 end
 
 require 'reek/rake/task'

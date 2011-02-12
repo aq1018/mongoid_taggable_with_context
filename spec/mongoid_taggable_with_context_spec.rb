@@ -255,5 +255,18 @@ describe Mongoid::TaggableWithContext do
       end
       
     end
+    
+    context "tagged_with" do
+      before :each do
+        @m1 = MyModel.create!(:tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
+        @m2 = MyModel.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
+        @m3 = MyModel.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
+      end
+      
+      it "should retrieve a list of documents" do
+        (MyModel.tags_tagged_with("food").to_a - [@m1, @m2, @m3]).should be_empty
+        (MyModel.artists_tagged_with("aaron").to_a - [@m1, @m3]).should be_empty
+      end
+    end
   end
 end

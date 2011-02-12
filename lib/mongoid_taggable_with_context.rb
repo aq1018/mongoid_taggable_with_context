@@ -168,8 +168,9 @@ module Mongoid::TaggableWithContext
     # @param [ Array<String, Symbol>, String ] :tags Tags to match.
     # @return [ Criteria ] A new criteria.
     def tagged_with(context, tags)
-      tags = convert_string_to_array(tags, tag_seperator_for(context)) if tags.is_a? String
-      criteria.all_in(context => tags)
+      tags = convert_string_to_array(tags, get_tag_separator_for(context)) if tags.is_a? String
+      array_field = tag_options_for(context)[:array_field]
+      all_in(array_field => tags)
     end
   
     # Helper method to convert a String to an Array based on the
