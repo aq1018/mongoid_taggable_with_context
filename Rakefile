@@ -19,6 +19,17 @@ Jeweler::Tasks.new do |gem|
   gem.email = "aq1018@gmail.com"
   gem.authors = ["Aaron Qian"]
   gem.add_runtime_dependency 'mongoid', '~> 2.0.0.beta.20'
+  
+  gem.add_development_dependency 'database_cleaner'
+  gem.add_development_dependency 'bson', '~> 1.2.1'
+  gem.add_development_dependency 'bson_ext', '~> 1.2.1'
+  gem.add_development_dependency 'rspec', '~> 2.3.0'
+  gem.add_development_dependency 'yard', '~> 0.6.0'
+  gem.add_development_dependency 'bundler', '~> 1.0.0'
+  gem.add_development_dependency 'jeweler', '~> 1.5.2'
+  gem.add_development_dependency 'rcov', '>= 0'
+  gem.add_development_dependency 'reek', '~> 1.2.8'
+  gem.add_development_dependency 'roodi', '~> 2.1.0'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
