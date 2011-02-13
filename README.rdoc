@@ -131,3 +131,8 @@ To see the test coverage, you need to be on ruby 1.8.7 (since latest rcov doesn'
 and run the following command:
 
   rake rcov
+  
+== Next Up
+
+* More documentation.
+* Separate Aggregation into it's own module. Include module to enable aggregation.
