@@ -80,7 +80,7 @@ Then in your form, for example:
   <% end %>
 
 
-== Tag Aggregation Strategies
+== Aggregation Strategies
 
 By including an aggregation strategy in your document, tag aggregations will be automatically available to you.
 This lib presents the following aggregation strategies:
@@ -171,3 +171,4 @@ and run the following command:
 == Next Up
 
 * More documentation.
+* More Strategies. ( Let me know what kind of strategies you want, or contribute your own. )
