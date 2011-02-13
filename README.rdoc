@@ -1,4 +1,4 @@
-== Mongoid Taggable With Context
+= Mongoid Taggable With Context
 
 A tagging lib for Mongoid that allows for custom tagging along dynamic contexts. This lib was originally based on Mongoid Taggable by Wilker Lúcio and Ches Martin. It has evolved substantially since that point, but all credit goes to them for the initial tagging functionality.
 
