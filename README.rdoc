@@ -1,6 +1,6 @@
 == Mongoid Taggable With Context
 
-A tagging plugin for Mongoid that allows for custom tagging along dynamic contexts. This plugin was originally based on Mongoid Taggable by Wilker Lúcio and Ches Martin. It has evolved substantially since that point, but all credit goes to them for the initial tagging functionality.
+A tagging lib for Mongoid that allows for custom tagging along dynamic contexts. This lib was originally based on Mongoid Taggable by Wilker Lúcio and Ches Martin. It has evolved substantially since that point, but all credit goes to them for the initial tagging functionality.
 
 For instance, in a social network, a user might have tags that are called skills, interests, sports, and more. There is no real way to differentiate between tags and so an implementation of this type is not possible with Mongoid Taggable.
 
@@ -8,7 +8,7 @@ Another example, aggregation such as counting tag occurrences was achieved by ma
 
 Enter Mongoid Taggable With Context. Rather than tying functionality to a specific keyword (namely "tags"), Mongoid Taggable With Context allows you to specify an arbitrary number of tag "contexts" that can be used locally or in combination in the same way Mongoid Taggable was used.
 
-Mongoid Taggable With Context implements tag aggregation without map-reduce, instead it quickly adjusts the aggregation collection whenever tags are inserted or removed with $inc operator. So performance won't be impacted as the number of tags and documents grow.
+Mongoid Taggable With Context also provides flexibility on aggregation strategy. In addition to the map-reduce strategy, Mongoid Taggable With Context also comes with real-time strategy. By using real-time strategy, your document can quickly adjusts the aggregation collection whenever tags are inserted or removed with $inc operator. So performance won't be impacted as the number of tags and documents grow.
 
 == Installation
 
@@ -80,9 +80,45 @@ Then in your form, for example:
   <% end %>
 
 
-== Tag Aggregation with Counts
+== Tag Aggregation Strategies
 
-This lib can automatically create aggregate collections of contexts and their counts for you. Each aggregate collection is scoped to the document collection type and context.
+By including an aggregation strategy in your document, tag aggregations will be automatically available to you.
+This lib presents the following aggregation strategies:
+
+* MapReduce
+* RealTime
+
+The following document will automatically aggregate counts on all tag contexts.
+
+  class Post
+    include Mongoid::Document
+    include Mongoid::TaggableWithContext
+    
+    # automatically adds real time aggregations to all tag contexts
+    include Mongoid::TaggableWithContext::AggregationStrategy::RealTime
+
+    # alternatively for map-reduce
+    # include Mongoid::TaggableWithContext::AggregationStrategy::MapReduce
+
+    field :title
+    field :content
+
+    taggable
+    taggable :interests
+    taggable :skills, :separator => ','
+  end
+
+When you include an aggregation strategy, your document also gains a few extra methods to retrieve aggregation data.
+In the case of previous example the following methods are included:
+
+  Post.tags
+  Post.tags_with_weight
+  Post.interests
+  Post.interests_with_weight
+  Post.skills
+  Post.skills_with_weight
+  
+Here is how to use these methods in more detail:
 
   Post.create!(:tags => "food,ant,bee")
   Post.create!(:tags => "juice,food,bee,zip")
@@ -135,4 +171,3 @@ and run the following command:
 == Next Up
 
 * More documentation.
-* Separate Aggregation into it's own module. Include module to enable aggregation.
