@@ -142,7 +142,7 @@ To change the default separator you may pass a *separator* argument to the macro
 
   class Post
     include Mongoid::Document
-    include Mongoid::Taggable
+    include Mongoid::TaggableWithContext
 
     field :title
     field :content
