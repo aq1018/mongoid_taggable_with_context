@@ -33,18 +33,18 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     end
 
     def changed_contexts
-      tag_contexts & previous_changes.keys.map(&:to_sym)
+      tag_contexts & changes.keys.map(&:to_sym)
     end
     
     def increment_tags_agregation
       # if document is created by using MyDocument.new
       # and attributes are individually assigned
-      # #previous_changes won't be empty and aggregation
+      # #changes won't be empty and aggregation
       # is updated in after_save, so we simply skip it.
-      return unless previous_changes.empty?
+      return unless changes.empty?
 
       # if the document is created by using MyDocument.create(:tags => "tag1 tag2")
-      # #previous_changes hash is empty and we have to update aggregation here
+      # #changes hash is empty and we have to update aggregation here
       tag_contexts.each do |context|
         coll = self.class.db.collection(self.class.aggregation_collection_for(context))
         field_name = self.class.tag_options_for(context)[:array_field]
@@ -72,7 +72,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
       changed_contexts.each do |context|
         coll = self.class.db.collection(self.class.aggregation_collection_for(context))
         field_name = self.class.tag_options_for(context)[:array_field]        
-        old_tags, new_tags = previous_changes["#{field_name}"]
+        old_tags, new_tags = changes["#{field_name}"]
         old_tags ||= []
         new_tags ||= []
         unchanged_tags = old_tags & new_tags

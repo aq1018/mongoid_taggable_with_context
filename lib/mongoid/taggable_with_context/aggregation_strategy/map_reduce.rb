@@ -30,7 +30,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     protected
     
     def trigger_update_tags_aggregation_on_create?
-      previous_changes.empty?
+      changes.empty?
     end
     
     def trigger_update_tags_aggregation_on_update?
@@ -68,7 +68,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     private
     
     def changed_contexts
-      tag_contexts & previous_changes.keys.map(&:to_sym)
+      tag_contexts & changes.keys.map(&:to_sym)
     end
     
     def map_reduce_context_tags!(context)
