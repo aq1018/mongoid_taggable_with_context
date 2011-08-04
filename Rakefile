@@ -18,7 +18,7 @@ Jeweler::Tasks.new do |gem|
   gem.description = %Q{It provides some helpers to create taggable documents with context.}
   gem.email = "aq1018@gmail.com"
   gem.authors = ["Aaron Qian"]
-  gem.add_runtime_dependency 'mongoid', '>= 2'
+  gem.add_runtime_dependency 'mongoid', '~> 2.0.0.beta.20'
   
   gem.add_development_dependency 'database_cleaner'
   gem.add_development_dependency 'bson', '~> 1.2.1'
