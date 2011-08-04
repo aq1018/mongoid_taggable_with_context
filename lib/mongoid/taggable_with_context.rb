@@ -4,8 +4,8 @@ module Mongoid::TaggableWithContext
   class AggregationStrategyMissing < Exception; end
 
   included do
-    class_inheritable_reader :taggable_with_context_options
-    write_inheritable_attribute(:taggable_with_context_options, {})
+    class_attribute :taggable_with_context_options
+    self.taggable_with_context_options = {}
     delegate "convert_string_to_array",     :to => 'self.class'
     delegate "convert_array_to_string",     :to => 'self.class'
     delegate "get_tag_separator_for",       :to => 'self.class'
@@ -48,7 +48,7 @@ module Mongoid::TaggableWithContext
       # register / update settings
       class_options = taggable_with_context_options || {}
       class_options[tags_field] = options
-      write_inheritable_attribute(:taggable_with_context_options, class_options)
+      self.taggable_with_context_options = class_options
       
       # setup fields & indexes
       field tags_field, :default => ""
@@ -95,11 +95,11 @@ module Mongoid::TaggableWithContext
     end
     
     def tag_contexts
-      taggable_with_context_options.keys
+      self.taggable_with_context_options.keys
     end
     
     def tag_options_for(context)
-      taggable_with_context_options[context]
+      self.taggable_with_context_options[context]
     end
 
     def tags_for(context, conditions={})
@@ -111,11 +111,11 @@ module Mongoid::TaggableWithContext
     end
   
     def get_tag_separator_for(context)
-      taggable_with_context_options[context][:separator]
+      self.taggable_with_context_options[context][:separator]
     end
 
     def set_tag_separator_for(context, value)
-      taggable_with_context_options[context][:separator] = value.nil? ? " " : value.to_s
+      self.taggable_with_context_options[context][:separator] = value.nil? ? " " : value.to_s
     end
             
     # Find documents tagged with all tags passed as a parameter, given
