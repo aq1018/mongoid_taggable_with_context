@@ -134,15 +134,15 @@ module Mongoid::TaggableWithContext
       array_field = tag_options_for(context)[:array_field]
       all_in(array_field => tags)
     end
-  
+
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
-    def convert_string_to_array(str = "", seperator = " ")
-      str.split(seperator).map(&:strip).uniq.compact
+    def convert_string_to_array(str = "", separator = " ")
+      str.split(separator).map(&:strip).uniq.reject(&:blank?)
     end
-  
-    def convert_array_to_string(ary = [], seperator = " ")
-      ary.uniq.compact.join(seperator)
+
+    def convert_array_to_string(ary = [], separator = " ")
+      ary.uniq.compact.join(separator)
     end
   end
 end
