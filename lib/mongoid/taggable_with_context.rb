@@ -1,6 +1,6 @@
 module Mongoid::TaggableWithContext
   extend ActiveSupport::Concern
-  
+
   class AggregationStrategyMissing < Exception; end
 
   included do
@@ -44,60 +44,60 @@ module Mongoid::TaggableWithContext
         :array_field => "#{tags_field}_array".to_sym
       )
       tags_array_field = options[:array_field]
-      
+
       # register / update settings
       class_options = taggable_with_context_options || {}
       class_options[tags_field] = options
       self.taggable_with_context_options = class_options
-      
+
       # setup fields & indexes
       field tags_field, :default => ""
       field tags_array_field, :type => Array, :default => []
-      index tags_array_field      
-      
+      index tags_array_field
+
       # singleton methods
       class_eval <<-END
         class << self
           def #{tags_field}
             tags_for(:"#{tags_field}")
           end
-      
+
           def #{tags_field}_with_weight
             tags_with_weight_for(:"#{tags_field}")
           end
-      
+
           def #{tags_field}_separator
             get_tag_separator_for(:"#{tags_field}")
           end
-          
+
           def #{tags_field}_separator=(value)
             set_tag_separator_for(:"#{tags_field}", value)
           end
-                  
+
           def #{tags_field}_tagged_with(tags)
             tagged_with(:"#{tags_field}", tags)
           end
         end
       END
-      
+
       # instance methods
       class_eval <<-END
         def #{tags_field}=(s)
           super
           write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
         end
-        
+
         def #{tags_array_field}=(a)
           super
           write_attribute(:#{tags_field}, convert_array_to_string(a, get_tag_separator_for(:"#{tags_field}")))
         end
       END
     end
-    
+
     def tag_contexts
       self.taggable_with_context_options.keys
     end
-    
+
     def tag_options_for(context)
       self.taggable_with_context_options[context]
     end
@@ -105,11 +105,11 @@ module Mongoid::TaggableWithContext
     def tags_for(context, conditions={})
       raise AggregationStrategyMissing
     end
-    
+
     def tags_with_weight_for(context, conditions={})
       raise AggregationStrategyMissing
     end
-  
+
     def get_tag_separator_for(context)
       self.taggable_with_context_options[context][:separator]
     end
@@ -117,7 +117,7 @@ module Mongoid::TaggableWithContext
     def set_tag_separator_for(context, value)
       self.taggable_with_context_options[context][:separator] = value.nil? ? " " : value.to_s
     end
-            
+
     # Find documents tagged with all tags passed as a parameter, given
     # as an Array or a String using the configured separator.
     #
@@ -138,7 +138,7 @@ module Mongoid::TaggableWithContext
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
     def convert_string_to_array(str = "", separator = " ")
-      str.split(separator).map(&:strip).uniq.reject(&:blank?)
+      clean_up_array(str.split(separator))
     end
 
     def convert_array_to_string(ary = [], separator = " ")
@@ -146,7 +146,7 @@ module Mongoid::TaggableWithContext
     end
 
     def clean_up_array(ary = [])
-      ary.uniq.compact
+      ary.uniq.map(&:strip).reject(&:blank?)
     end
   end
 end
