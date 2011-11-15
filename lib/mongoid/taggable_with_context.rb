@@ -139,7 +139,7 @@ module Mongoid::TaggableWithContext
     end
 
     def clean_up_array(ary = [])
-      ary.uniq.map(&:strip).reject(&:blank?)
+      ary.uniq.reject(&:blank?).map(&:strip)
     end
   end
 end
