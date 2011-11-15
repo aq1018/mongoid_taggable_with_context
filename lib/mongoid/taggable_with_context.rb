@@ -59,7 +59,7 @@ module Mongoid::TaggableWithContext
       class_eval <<-END
         class << self
           def #{tags_field}
-            tags_for(:"#{tags_field}")
+            self.send(:"#{tags_array_field}")
           end
 
           def #{tags_field}_with_weight
@@ -83,13 +83,7 @@ module Mongoid::TaggableWithContext
       # instance methods
       class_eval <<-END
         def #{tags_field}=(s)
-          super
           write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
-        end
-
-        def #{tags_array_field}=(a)
-          super
-          write_attribute(:#{tags_field}, convert_array_to_string(a, get_tag_separator_for(:"#{tags_field}")))
         end
       END
     end
