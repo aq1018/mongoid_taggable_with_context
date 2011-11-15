@@ -51,7 +51,6 @@ module Mongoid::TaggableWithContext
       self.taggable_with_context_options = class_options
 
       # setup fields & indexes
-      field tags_field, :default => ""
       field tags_array_field, :type => Array, :default => []
       index tags_array_field
 
