@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'mongoid', '~> 2.2.2'
+gem 'mongoid', '~> 2.3.0'
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
@@ -16,3 +16,4 @@ group :development do
   gem 'reek', '~> 1.2.8'
   gem 'roodi', '~> 2.1.0'
 end
+
