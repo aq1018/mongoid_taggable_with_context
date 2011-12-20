@@ -57,6 +57,12 @@ module Mongoid::TaggableWithContext
       # singleton methods
       class_eval <<-END
         class << self
+          # retrieve all tags ever created for the model
+          def #{tags_field}
+            tags_for(:"#{tags_field}")
+          end
+
+          # retrieve all tags ever created for the model with weights
           def #{tags_field}_with_weight
             tags_with_weight_for(:"#{tags_field}")
           end
