@@ -138,7 +138,10 @@ module Mongoid::TaggableWithContext
     end
 
     def clean_up_array(ary = [])
-      ary.uniq.reject(&:blank?).map(&:strip)
+      # 1). strip all white spaces. Could cause blank strings
+      # 2). remove all blank strings
+      # 3). remove duplicate
+      ary.map(&:strip).reject(&:blank?).uniq
     end
   end
 end
