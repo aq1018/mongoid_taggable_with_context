@@ -3,9 +3,9 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     extend ActiveSupport::Concern
     
     included do
-      set_callback :create,   :after, :increment_tags_agregation
-      set_callback :save,     :after, :update_tags_aggregation
-      set_callback :destroy,  :after, :decrement_tags_aggregation
+      set_callback :create,   :after, :update_tags_aggregation, :if => :tags_changed?
+      set_callback :save,     :after, :update_tags_aggregation, :if => :tags_changed?
+      set_callback :destroy,  :after, :update_tags_aggregation
     end
     
     module ClassMethods
@@ -27,66 +27,36 @@ module Mongoid::TaggableWithContext::AggregationStrategy
       end
     end
     
-    private
-    def need_update_tags_aggregation?
-      !changed_contexts.empty?
-    end
+    protected
 
-    def changed_contexts
-      tag_contexts & changes.keys.map(&:to_sym)
+    def changed_tag_arrays
+      tag_array_attributes & changes.keys.map(&:to_sym)
     end
     
-    def increment_tags_agregation
-      # if document is created by using MyDocument.new
-      # and attributes are individually assigned
-      # #changes won't be empty and aggregation
-      # is updated in after_save, so we simply skip it.
-      return unless changes.empty?
-
-      # if the document is created by using MyDocument.create(:tags => "tag1 tag2")
-      # #changes hash is empty and we have to update aggregation here
-      tag_contexts.each do |context|
-        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
-        field_name = self.class.tag_options_for(context)[:array_field]
-        tags = self.send field_name || []
-        tags.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => 1}}, :upsert => true)
-        end
-      end
+    def tags_changed?
+      !changed_tag_arrays.empty?
     end
-
-    def decrement_tags_aggregation
-      tag_contexts.each do |context|
-        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
-        field_name = self.class.tag_options_for(context)[:array_field]
-        tags = self.send field_name || []
-        tags.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => -1}}, :upsert => true)
-        end
-      end
-    end
-
+    
     def update_tags_aggregation
-      return unless need_update_tags_aggregation?
-
-      changed_contexts.each do |context|
+      changed_tag_arrays.each do |field_name|
+        context = context_array_to_context_hash[field_name]
         coll = self.class.db.collection(self.class.aggregation_collection_for(context))
-        field_name = self.class.tag_options_for(context)[:array_field]        
+        field_name = self.class.tag_options_for(context)[:array_field]      
         old_tags, new_tags = changes["#{field_name}"]
         old_tags ||= []
         new_tags ||= []
-        unchanged_tags = old_tags & new_tags
-        tags_removed = old_tags - unchanged_tags
-        tags_added = new_tags - unchanged_tags
+        unchanged_tags  = old_tags & new_tags
+        tags_removed    = old_tags - unchanged_tags
+        tags_added      = new_tags - unchanged_tags
 
-        tags_removed.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => -1}}, :upsert => true)
+        tags_removed.each do |tag|
+          coll.update({:_id => tag}, {'$inc' => {:value => -1}}, :upsert => true)
         end
 
-        tags_added.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => 1}}, :upsert => true)
+        tags_added.each do |tag|
+          coll.update({:_id => tag}, {'$inc' => {:value => 1}}, :upsert => true)
         end
-      end
+      end      
     end
   end
 end

@@ -5,12 +5,16 @@ module Mongoid::TaggableWithContext
 
   included do
     class_attribute :taggable_with_context_options
+    class_attribute :context_array_to_context_hash
     self.taggable_with_context_options = {}
-    delegate "convert_string_to_array",     :to => 'self.class'
-    delegate "convert_array_to_string",     :to => 'self.class'
-    delegate "get_tag_separator_for",       :to => 'self.class'
-    delegate "tag_contexts",                :to => 'self.class'
-    delegate "tag_options_for",             :to => 'self.class'
+    self.context_array_to_context_hash = {}
+    delegate "convert_string_to_array",       :to => 'self.class'
+    delegate "convert_array_to_string",       :to => 'self.class'
+    delegate "get_tag_separator_for",         :to => 'self.class'
+    delegate "tag_contexts",                  :to => 'self.class'
+    delegate "tag_options_for",               :to => 'self.class'
+    delegate "tag_array_attributes",          :to => 'self.class'
+    delegate "context_array_to_context_hash", :to => 'self.class'
   end
 
   module ClassMethods
@@ -46,9 +50,8 @@ module Mongoid::TaggableWithContext
       tags_array_field = options[:array_field]
 
       # register / update settings
-      class_options = taggable_with_context_options || {}
-      class_options[tags_field] = options
-      self.taggable_with_context_options = class_options
+      self.taggable_with_context_options[tags_field] = options
+      self.context_array_to_context_hash[options[:array_field]] = tags_field 
 
       # setup fields & indexes
       field tags_array_field, :type => Array, :default => []
@@ -94,6 +97,12 @@ module Mongoid::TaggableWithContext
 
     def tag_contexts
       self.taggable_with_context_options.keys
+    end
+    
+    def tag_array_attributes
+      self.taggable_with_context_options.keys.map do |context|
+        tag_options_for(context)[:array_field]
+      end
     end
 
     def tag_options_for(context)
@@ -144,10 +153,11 @@ module Mongoid::TaggableWithContext
     end
 
     def clean_up_array(ary = [])
-      # 1). strip all white spaces. Could cause blank strings
+      # 0). remove all nil values
+      # 1). strip all white spaces. Could leave blank strings (e.g. foo, , bar, baz)
       # 2). remove all blank strings
       # 3). remove duplicate
-      ary.map(&:strip).reject(&:blank?).uniq
+      ary.compact.map(&:strip).reject(&:blank?).uniq
     end
   end
 end

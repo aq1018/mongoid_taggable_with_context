@@ -2,9 +2,9 @@ module Mongoid::TaggableWithContext::AggregationStrategy
   module MapReduce
     extend ActiveSupport::Concern
     included do
-      set_callback :create, :after, :update_tags_agregation_on_create
-      set_callback :save, :after, :update_tags_aggregation_on_update
-      set_callback :destroy, :after, :update_tags_aggregation_on_destroy
+      set_callback :create,   :after, :map_reduce_all_contexts!, :if => :tags_changed?
+      set_callback :save,     :after, :map_reduce_all_contexts!, :if => :tags_changed?
+      set_callback :destroy,  :after, :map_reduce_all_contexts!
       delegate :aggregation_collection_for, :to => "self.class"
     end
     
@@ -28,50 +28,22 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     end
     
     protected
-    
-    def trigger_update_tags_aggregation_on_create?
-      changes.empty?
-    end
-    
-    def trigger_update_tags_aggregation_on_update?
-      !changed_contexts.empty?
-    end
-    
-    def trigger_update_tags_aggregation_on_destroy?
-      true
-    end
-    
-    def update_tags_agregation_on_create
-      return unless trigger_update_tags_aggregation_on_create?
 
+    def changed_tag_arrays
+      tag_array_attributes & changes.keys.map(&:to_sym)
+    end
+    
+    def tags_changed?
+      !changed_tag_arrays.empty?
+    end
+    
+    def map_reduce_all_contexts!
       tag_contexts.each do |context|
-        map_reduce_context_tags!(context)
-      end
-    end
-
-    def update_tags_aggregation_on_update
-      return unless trigger_update_tags_aggregation_on_update?
-
-      changed_contexts.each do |context|
-        map_reduce_context_tags!(context)
-      end
-    end
-
-    def update_tags_aggregation_on_destroy
-      return unless trigger_update_tags_aggregation_on_destroy?
-
-      tag_contexts.each do |context|
-        map_reduce_context_tags!(context)
+        map_reduce_context!(context)
       end
     end
     
-    private
-    
-    def changed_contexts
-      tag_contexts & changes.keys.map(&:to_sym)
-    end
-    
-    def map_reduce_context_tags!(context)
+    def map_reduce_context!(context)
       field = tag_options_for(context)[:array_field]
 
       map = <<-END
