@@ -2,7 +2,6 @@ module Mongoid::TaggableWithContext::AggregationStrategy
   module MapReduce
     extend ActiveSupport::Concern
     included do
-      set_callback :create,   :after, :map_reduce_all_contexts!, :if => :tags_changed?
       set_callback :save,     :after, :map_reduce_all_contexts!, :if => :tags_changed?
       set_callback :destroy,  :after, :map_reduce_all_contexts!
       delegate :aggregation_collection_for, :to => "self.class"

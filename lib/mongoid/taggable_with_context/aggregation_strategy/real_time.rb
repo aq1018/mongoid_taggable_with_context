@@ -3,7 +3,6 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     extend ActiveSupport::Concern
     
     included do
-      set_callback :create,   :after, :update_tags_aggregation, :if => :tags_changed?
       set_callback :save,     :after, :update_tags_aggregation, :if => :tags_changed?
       set_callback :destroy,  :after, :update_tags_aggregation
     end
