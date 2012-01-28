@@ -137,7 +137,7 @@ Post.skills_with_weight
 
 Here is how to use these methods in more detail:
 
-```
+```ruby
 Post.create!(:tags => "food,ant,bee")
 Post.create!(:tags => "juice,food,bee,zip")
 Post.create!(:tags => "honey,strip,food")
