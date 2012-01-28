@@ -12,8 +12,5 @@ group :development do
   gem 'yard'
   gem 'bundler', '>= 1.0.0'
   gem 'jeweler'
-  gem 'rcov'
-  gem 'reek'
-  gem 'roodi'
 end
 
