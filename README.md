@@ -1,17 +1,17 @@
-Mongoid Taggable With Context
+mongoid_taggable_with_context
 =============================
 
 [![Build Status](https://secure.travis-ci.org/aq1018/mongoid_taggable_with_context.png?branch=master)](http://travis-ci.org/aq1018/mongoid_taggable_with_context) [![Dependency Status](https://gemnasium.com/aq1018/mongoid_taggable_with_context.png?travis)](https://gemnasium.com/aq1018/mongoid_taggable_with_context)
 
 A tagging lib for Mongoid that allows for custom tagging along dynamic contexts. This gem was originally based on [mongoid_taggable](https://github.com/ches/mongoid_taggable) by Wilker Lúcio and Ches Martin. It has evolved substantially since that point, but all credit goes to them for the initial tagging functionality.
 
-For instance, in a social network, a user might have tags that are called skills, interests, sports, and more. There is no real way to differentiate between tags and so an implementation of this type is not possible with Mongoid Taggable.
+For instance, in a social network, a user might have tags that are called skills, interests, sports, and more. There is no real way to differentiate between tags and so an implementation of this type is not possible with `mongoid_taggable`.
 
-Another example, aggregation such as counting tag occurrences was achieved by map-reduce with Mongoid Taggable. It was ok for small amount of tags, but when the amount of tags and documents grow, the original [mongoid_taggable](https://github.com/ches/mongoid_taggable) won't be able to scale to real-time statistics demand.
+Another example, aggregation such as counting tag occurrences was achieved by map-reduce with `mongoid_taggable`. It was ok for small amount of tags, but when the amount of tags and documents grow, the original `mongoid_taggable` won't be able to scale to real-time statistics demand.
 
-Enter [mongoid_taggable_with_context](https://github.com/aq1018/mongoid_taggable_with_context). Rather than tying functionality to a specific keyword (namely "tags"), [mongoid_taggable_with_context](https://github.com/aq1018/mongoid_taggable_with_context) allows you to specify an arbitrary number of tag "contexts" that can be used locally or in combination in the same way [mongoid_taggable](https://github.com/ches/mongoid_taggable) was used.
+Enter `mongoid_taggable_with_context`. Rather than tying functionality to a specific keyword (namely "tags"), `mongoid_taggable_with_context` allows you to specify an arbitrary number of *tag contexts* that can be used locally or in combination in the same way `mongoid_taggable` was used.
 
-[mongoid_taggable_with_context](https://github.com/aq1018/mongoid_taggable_with_context) also provides flexibility on aggregation strategy. In addition to the map-reduce strategy, this gem also comes with real-time strategy. By using real-time strategy, your document can quickly adjusts the aggregation collection whenever tags are inserted or removed with $inc operator. So performance won't be impacted as the number of tags and documents grow.
+`mongoid_taggable_with_context` also provides flexibility on aggregation strategy. In addition to the map-reduce strategy, this gem also comes with real-time strategy. By using real-time strategy, your document can quickly adjusts the aggregation collection whenever tags are inserted or removed with $inc operator. So performance won't be impacted as the number of tags and documents grow.
 
 Installation
 ------------
@@ -173,7 +173,7 @@ end
 ```
 
 Contributing to mongoid_taggable_with_context
--------------------------------
+-----------------------------------------------
 
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
