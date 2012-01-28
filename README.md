@@ -64,7 +64,7 @@ end
 
 Then in your form, for example:
 
-```html
+```rhtml
 <% form_for @post do |f| %>
   <p>
     <%= f.label :title %><br />
