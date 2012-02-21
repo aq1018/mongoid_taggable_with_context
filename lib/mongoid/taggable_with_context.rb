@@ -10,7 +10,7 @@ module Mongoid::TaggableWithContext
     self.context_array_to_context_hash = {}
     delegate "convert_string_to_array",       :to => 'self.class'
     delegate "convert_array_to_string",       :to => 'self.class'
-    delegate "cleanup_array",                 :to => 'self.class'
+    delegate "clean_up_array",                :to => 'self.class'
     delegate "get_tag_separator_for",         :to => 'self.class'
     delegate "tag_contexts",                  :to => 'self.class'
     delegate "tag_options_for",               :to => 'self.class'
