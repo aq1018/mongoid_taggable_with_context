@@ -92,6 +92,9 @@ module Mongoid::TaggableWithContext
         def #{tags_field}=(s)
           write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
         end
+        def #{tags_array_field}=(ary)
+          write_attribute(:#{tags_array_field}, clean_up_array(ary))
+        end
       END
     end
 
