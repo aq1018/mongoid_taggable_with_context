@@ -73,7 +73,7 @@ describe Mongoid::TaggableWithContext do
     end
   end
 
-context "saving tags from plain array" do
+  context "saving tags from array" do
     before :each do
       @m = MyModel.new
     end
