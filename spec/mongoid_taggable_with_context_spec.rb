@@ -87,6 +87,11 @@ describe Mongoid::TaggableWithContext do
       @m.tags_array = ["some", nil, "new", nil, "tags"]
       @m.tags_array.should == %w[some new tags]
     end
+
+    it "should remove empty strings from array" do
+      @m.tags_array = ["some", "", "new", "", "tags"]
+      @m.tags_array.should == %w[some new tags]
+    end
   end
 
   context "changing separator" do
