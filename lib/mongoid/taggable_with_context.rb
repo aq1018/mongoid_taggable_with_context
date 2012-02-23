@@ -153,7 +153,7 @@ module Mongoid::TaggableWithContext
     end
 
     def convert_array_to_string(ary = [], separator = " ")
-      clean_up_array(ary).join(separator)
+      ary.join(separator)
     end
 
     def clean_up_array(ary = [])
