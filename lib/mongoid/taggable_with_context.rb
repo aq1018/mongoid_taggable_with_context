@@ -10,6 +10,7 @@ module Mongoid::TaggableWithContext
     self.context_array_to_context_hash = {}
     delegate "convert_string_to_array",       :to => 'self.class'
     delegate "convert_array_to_string",       :to => 'self.class'
+    delegate "clean_up_array",                :to => 'self.class'
     delegate "get_tag_separator_for",         :to => 'self.class'
     delegate "tag_contexts",                  :to => 'self.class'
     delegate "tag_options_for",               :to => 'self.class'
@@ -92,6 +93,9 @@ module Mongoid::TaggableWithContext
         def #{tags_field}=(s)
           write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
         end
+        def #{tags_array_field}=(ary)
+          write_attribute(:#{tags_array_field}, clean_up_array(ary))
+        end
       END
     end
 
@@ -149,7 +153,7 @@ module Mongoid::TaggableWithContext
     end
 
     def convert_array_to_string(ary = [], separator = " ")
-      clean_up_array(ary).join(separator)
+      ary.join(separator)
     end
 
     def clean_up_array(ary = [])
