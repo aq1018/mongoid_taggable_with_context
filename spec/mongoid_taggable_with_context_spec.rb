@@ -6,6 +6,7 @@ class MyModel
     
   taggable
   taggable :artists
+  taggable :albums, :default => []
 end
 
 class M1
@@ -27,6 +28,21 @@ class M2
 end
 
 describe Mongoid::TaggableWithContext do
+
+  context "default field value" do
+    before :each do
+      @m = MyModel.new
+    end
+
+    it "should be nil for artists" do
+      @m.changes['artists'].should be_nil
+    end
+
+    it "should be array for albums" do
+      @m.changes['albums_array'].should eql([nil, []])
+    end
+  end
+
   context "saving tags from plain text" do
     before :each do
       @m = MyModel.new
