@@ -55,7 +55,7 @@ module Mongoid::TaggableWithContext
       self.context_array_to_context_hash[options[:array_field]] = tags_field 
 
       # setup fields & indexes
-      field tags_array_field, :type => Array, :default => []
+      field tags_array_field, :type => Array, :default => options[:default]
       index tags_array_field
 
       # singleton methods
