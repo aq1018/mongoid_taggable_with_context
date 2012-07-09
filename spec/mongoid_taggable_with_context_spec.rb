@@ -6,6 +6,7 @@ class MyModel
     
   taggable
   taggable :artists
+  taggable :albums, :default => []
 end
 
 class M1
@@ -27,6 +28,21 @@ class M2
 end
 
 describe Mongoid::TaggableWithContext do
+
+  context "default field value" do
+    before :each do
+      @m = MyModel.new
+    end
+
+    it "should be nil for artists" do
+      @m.changes['artists'].should be_nil
+    end
+
+    it "should be array for albums" do
+      @m.changes['albums_array'].should eql([nil, []])
+    end
+  end
+
   context "saving tags from plain text" do
     before :each do
       @m = MyModel.new
@@ -70,6 +86,27 @@ describe Mongoid::TaggableWithContext do
     it "should remove nil tags from array" do
       @m.tags_array = ["some", nil, "new", nil, "tags"]
       @m.tags.should == "some new tags"
+    end
+  end
+
+  context "saving tags from array" do
+    before :each do
+      @m = MyModel.new
+    end
+    
+    it "should remove repeated tags from array" do
+      @m.tags_array = %w[some new tags some new tags]
+      @m.tags_array == %w[some new tags]
+    end
+    
+    it "should remove nil tags from array" do
+      @m.tags_array = ["some", nil, "new", nil, "tags"]
+      @m.tags_array.should == %w[some new tags]
+    end
+
+    it "should remove empty strings from array" do
+      @m.tags_array = ["some", "", "new", "", "tags"]
+      @m.tags_array.should == %w[some new tags]
     end
   end
 

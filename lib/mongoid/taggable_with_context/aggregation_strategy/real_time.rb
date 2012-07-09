@@ -3,9 +3,8 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     extend ActiveSupport::Concern
     
     included do
-      set_callback :create,   :after, :increment_tags_agregation
-      set_callback :save,     :after, :update_tags_aggregation
-      set_callback :destroy,  :after, :decrement_tags_aggregation
+      set_callback :save,     :after, :update_tags_aggregations_on_save
+      set_callback :destroy,  :after, :update_tags_aggregations_on_destroy
     end
     
     module ClassMethods
@@ -27,66 +26,42 @@ module Mongoid::TaggableWithContext::AggregationStrategy
       end
     end
     
-    private
-    def need_update_tags_aggregation?
-      !changed_contexts.empty?
-    end
+    protected
+    
+    def update_tags_aggregation(context_array_field, old_tags=[], new_tags=[])
+      context = context_array_to_context_hash[context_array_field]
+      coll = self.class.db.collection(self.class.aggregation_collection_for(context))
 
-    def changed_contexts
-      tag_contexts & changes.keys.map(&:to_sym)
+      old_tags ||= []
+      new_tags ||= []
+      unchanged_tags  = old_tags & new_tags
+      tags_removed    = old_tags - unchanged_tags
+      tags_added      = new_tags - unchanged_tags
+      
+      tags_removed.each do |tag|
+        coll.update({:_id => tag}, {'$inc' => {:value => -1}}, :upsert => true)
+      end
+
+      tags_added.each do |tag|
+        coll.update({:_id => tag}, {'$inc' => {:value => 1}}, :upsert => true)
+      end      
     end
     
-    def increment_tags_agregation
-      # if document is created by using MyDocument.new
-      # and attributes are individually assigned
-      # #changes won't be empty and aggregation
-      # is updated in after_save, so we simply skip it.
-      return unless changes.empty?
+    def update_tags_aggregations_on_save
+      tag_array_attributes.each do |context_array|
+        next if changes[context_array].nil?
 
-      # if the document is created by using MyDocument.create(:tags => "tag1 tag2")
-      # #changes hash is empty and we have to update aggregation here
-      tag_contexts.each do |context|
-        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
-        field_name = self.class.tag_options_for(context)[:array_field]
-        tags = self.send field_name || []
-        tags.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => 1}}, :upsert => true)
-        end
+        old_tags, new_tags = changes[context_array]
+        update_tags_aggregation(context_array, old_tags, new_tags)
       end
     end
-
-    def decrement_tags_aggregation
-      tag_contexts.each do |context|
-        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
-        field_name = self.class.tag_options_for(context)[:array_field]
-        tags = self.send field_name || []
-        tags.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => -1}}, :upsert => true)
-        end
-      end
-    end
-
-    def update_tags_aggregation
-      return unless need_update_tags_aggregation?
-
-      changed_contexts.each do |context|
-        coll = self.class.db.collection(self.class.aggregation_collection_for(context))
-        field_name = self.class.tag_options_for(context)[:array_field]        
-        old_tags, new_tags = changes["#{field_name}"]
-        old_tags ||= []
-        new_tags ||= []
-        unchanged_tags = old_tags & new_tags
-        tags_removed = old_tags - unchanged_tags
-        tags_added = new_tags - unchanged_tags
-
-        tags_removed.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => -1}}, :upsert => true)
-        end
-
-        tags_added.each do |t|
-          coll.update({:_id => t}, {'$inc' => {:value => 1}}, :upsert => true)
-        end
-      end
+    
+    def update_tags_aggregations_on_destroy
+      tag_array_attributes.each do |context_array|
+        old_tags = send context_array
+        new_tags = []
+        update_tags_aggregation(context_array, old_tags, new_tags)
+      end      
     end
   end
 end
