@@ -59,7 +59,6 @@ module Mongoid::TaggableWithContext
       # deprecated: index tags_array_field
       # Invalid index specification on Category: tags_array, {}
       index({ tags_array_field: 1 }, { unique: true, background: true })     
-      # index({ first_name: 1, last_name: 1 }, { unique: true })
 
       # singleton methods
       class_eval <<-END
@@ -156,7 +155,8 @@ module Mongoid::TaggableWithContext
     end
 
     def convert_array_to_string(ary = [], separator = " ")
-      ary.join(separator)
+      #ary.join(separator)
+      (ary || []).join(separator)
     end
 
     def clean_up_array(ary = [])
