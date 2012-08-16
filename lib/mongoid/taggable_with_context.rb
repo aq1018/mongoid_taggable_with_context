@@ -166,5 +166,6 @@ module Mongoid::TaggableWithContext
       # 3). remove duplicate
       ary.compact.map(&:strip).reject(&:blank?).uniq
     end
+
   end
 end
