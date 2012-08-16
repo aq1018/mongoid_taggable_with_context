@@ -58,7 +58,7 @@ module Mongoid::TaggableWithContext
       field tags_array_field, :type => Array, :default => options[:default]
       # deprecated: index tags_array_field
       # Invalid index specification on Category: tags_array, {}
-      index({ tags_array_field: 1 }, { unique: true, background: true })     
+      index({ tags_array_field => 1 }, { unique: true, background: true })     
 
       # singleton methods
       class_eval <<-END
