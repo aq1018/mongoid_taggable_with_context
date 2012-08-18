@@ -54,7 +54,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<bundler>, [">= 1.0.0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
-      s.add_dependency(%q<mongoid>, ["3.0.1"])
+      s.add_dependency(%q<mongoid>, [">= 3.0.1"])
       s.add_dependency(%q<database_cleaner>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<yard>, [">= 0"])
