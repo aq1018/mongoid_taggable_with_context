@@ -6,7 +6,7 @@ module Mongoid::TaggableWithContext::GroupBy::AggregationStrategy
 
     module ClassMethods
       def tag_name_attribute
-        "name"
+        "_name"
       end
 
       def tags_for(context, group_by, conditions={})
@@ -42,7 +42,7 @@ module Mongoid::TaggableWithContext::GroupBy::AggregationStrategy
     protected
 
     def get_conditions(context, tag)
-      conditions = {:name => tag}
+      conditions = {self.class.tag_name_attribute.to_sym => tag}
       group_by_field = self.class.get_tag_group_by_field_for(context)
       if group_by_field
         conditions.merge!({:group_by => self.send(group_by_field)})
