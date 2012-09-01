@@ -168,7 +168,17 @@ describe Mongoid::TaggableWithContext do
   end
   
   shared_examples_for "aggregation" do
-    context "retriving index" do
+    context "retrieving index" do
+      context "when there's no tags'" do
+        it "should return an empty array" do
+          klass.tags.should == []
+          klass.artists.should == []
+
+          klass.tags_with_weight.should == []
+          klass.artists_with_weight == []
+        end
+      end
+
       context "on create directly" do
         before :each do
           klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
