@@ -95,7 +95,7 @@ describe Mongoid::TaggableWithContext do
     end
     
     it "should remove repeated tags from array" do
-      @m.tags_array = %w[some new tags some new tags]
+      @m.tags = %w[some new tags some new tags]
       @m.tags_array.should == %w[some new tags]
     end
     
@@ -106,6 +106,17 @@ describe Mongoid::TaggableWithContext do
 
     it "should remove empty strings from array" do
       @m.tags = ["some", "", "new", "", "tags"]
+      @m.tags_array.should == %w[some new tags]
+    end
+  end
+
+  context "saving tags from array using tags_array alias method" do
+    before :each do
+      @m = MyModel.new
+    end
+
+    it "should remove nil tags from array" do
+      @m.tags_array = ["some", nil, "new", nil, "tags"]
       @m.tags_array.should == %w[some new tags]
     end
   end
