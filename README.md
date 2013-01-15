@@ -42,23 +42,22 @@ class Post
   field :content
 
   # default context is 'tags'.
-  # This creates #tags, #tags=, #tags_array, #tags_array= instance methods
+  # This creates #tags, #tags=, #tags_string instance methods
   # separator is " " by default
-  # #tags method returns space separated string
-  # #tags= methods accepts space separated string
-  # #tags_array method returns an array of tags
-  # #tags_array= method accepts an array of tags
-  # #tags and #tags_array are automatically synched.
+  # #tags method returns an array of tags
+  # #tags= methods accepts an array of tags or a separated string
+  # #tags_string method returns a separated string
   taggable
 
   # tagging for 'interests' context.
-  # This creates #interests, #interests=, #interests_array, #interests_array= instance methods
-  taggable :interests
+  # This creates #interests, #interests=, #interests_string instance methods
+  # The tags will be persisted in a database field called 'interest_array'
+  taggable :interests, :field => :interest_array
 
   # tagging for 'skills' context.
-  # This creates #skills, #skills=, #skills_array, #skills_array= instance methods
+  # This creates #skills, #skills=, #my_skill_list instance methods
   # changing tag separator to "," (Default is " ")
-  taggable :skills, :separator => ','
+  taggable :skills, :separator => ',', :string_method => :my_skill_list
 end
 ```
 
@@ -118,7 +117,7 @@ class Post
   field :content
 
   taggable
-  taggable :interests
+  taggable :interests, :field => :interest_array
   taggable :skills, :separator => ','
 end
 ```
