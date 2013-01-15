@@ -3,6 +3,8 @@ module Mongoid::TaggableWithContext
 
   class AggregationStrategyMissing < Exception; end
 
+  TAGGABLE_DEFAULT_SEPARATOR = ' '
+
   included do
     class_attribute :taggable_with_context_options
     class_attribute :context_array_to_context_hash
@@ -45,7 +47,7 @@ module Mongoid::TaggableWithContext
       options = args.extract_options!
       tags_field = (args.blank? ? :tags : args.shift).to_sym
       options.reverse_merge!(
-        :separator => ' ',
+        :separator => TAGGABLE_DEFAULT_SEPARATOR,
         :array_field => "#{tags_field}_array".to_sym
       )
       tags_array_field = options[:array_field]
@@ -129,7 +131,7 @@ module Mongoid::TaggableWithContext
     end
 
     def set_tag_separator_for(context, value)
-      self.taggable_with_context_options[context][:separator] = value.nil? ? " " : value.to_s
+      self.taggable_with_context_options[context][:separator] = value.nil? ? TAGGABLE_DEFAULT_SEPARATOR : value.to_s
     end
 
     # Find documents tagged with all tags passed as a parameter, given
@@ -151,11 +153,11 @@ module Mongoid::TaggableWithContext
 
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
-    def convert_string_to_array(str = "", separator = " ")
+    def convert_string_to_array(str = "", separator = TAGGABLE_DEFAULT_SEPARATOR)
       clean_up_array(str.split(separator))
     end
 
-    def convert_array_to_string(ary = [], separator = " ")
+    def convert_array_to_string(ary = [], separator = TAGGABLE_DEFAULT_SEPARATOR)
       #ary.join(separator)
       (ary || []).join(separator)
     end
