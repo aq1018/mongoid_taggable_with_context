@@ -49,6 +49,7 @@ module Mongoid::TaggableWithContext
       tags_field = (args.blank? ? :tags : args.shift).to_sym
       options.reverse_merge!(
         :separator => TAGGABLE_DEFAULT_SEPARATOR,
+        :string_field => "#{tags_field}_string".to_sym,
         :array_field => "#{tags_field}_array".to_sym
       )
       tags_array_field = options[:array_field]
@@ -94,6 +95,9 @@ module Mongoid::TaggableWithContext
       # instance methods
       class_eval <<-END
         def #{tags_field}
+          #{tags_array_field}
+        end
+        def #{options[:string_field]}
           convert_array_to_string(#{tags_array_field}, get_tag_separator_for(:"#{tags_field}"))
         end
         def #{tags_field}=(value)

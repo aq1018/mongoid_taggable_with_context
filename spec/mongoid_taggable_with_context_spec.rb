@@ -35,11 +35,11 @@ describe Mongoid::TaggableWithContext do
     end
 
     it "should be nil for artists" do
-      @m.changes['artists'].should be_nil
+      @m.artists.should eql nil
     end
 
     it "should be array for albums" do
-      @m.changes['albums_array'].should eql([nil, []])
+      @m.albums.should eql []
     end
   end
 
@@ -48,44 +48,44 @@ describe Mongoid::TaggableWithContext do
       @m = MyModel.new
     end
 
-    it "should set tags array from string" do
+    it "should set tags from string" do
       @m.tags = "some new tag"
-      @m.tags_array.should == %w[some new tag]
+      @m.tags.should == %w[some new tag]
     end
     
-    it "should set artists array from string" do
+    it "should set artists tags from string" do
       @m.artists = "some new tag"
-      @m.artists_array.should == %w[some new tag]
+      @m.artists.should == %w[some new tag]
     end
 
-    it "should retrieve tags string from array" do
-      @m.tags_array = %w[some new tags]
-      @m.tags.should == "some new tags"
+    it "should retrieve tags string" do
+      @m.tags = %w[some new tags]
+      @m.tags_string.should == "some new tags"
     end
     
-    it "should retrieve artists string from array" do
-      @m.artists_array = %w[some new tags]
-      @m.artists.should == "some new tags"
+    it "should retrieve artists string" do
+      @m.artists = %w[some new tags]
+      @m.artists_string.should == "some new tags"
     end
 
     it "should strip tags before put in array" do
       @m.tags = "now   with   some spaces   in places "
-      @m.tags_array.should == %w[now with some spaces in places]
+      @m.tags.should == %w[now with some spaces in places]
     end
     
     it "should remove repeated tags from string" do
       @m.tags = "some new tags some new tags"
-      @m.tags_array.should == %w[some new tags]
+      @m.tags.should == %w[some new tags]
     end
     
     it "should remove repeated tags from array" do
       @m.tags = %w[some new tags some new tags]
-      @m.tags.should == "some new tags"
+      @m.tags.should == %w[some new tags]
     end
     
     it "should remove nil tags from array" do
       @m.tags = ["some", nil, "new", nil, "tags"]
-      @m.tags.should == "some new tags"
+      @m.tags.should == %w[some new tags]
     end
   end
 
@@ -96,17 +96,17 @@ describe Mongoid::TaggableWithContext do
     
     it "should remove repeated tags from array" do
       @m.tags = %w[some new tags some new tags]
-      @m.tags_array.should == %w[some new tags]
+      @m.tags.should == %w[some new tags]
     end
     
     it "should remove nil tags from array" do
       @m.tags = ["some", nil, "new", nil, "tags"]
-      @m.tags_array.should == %w[some new tags]
+      @m.tags.should == %w[some new tags]
     end
 
     it "should remove empty strings from array" do
       @m.tags = ["some", "", "new", "", "tags"]
-      @m.tags_array.should == %w[some new tags]
+      @m.tags.should == %w[some new tags]
     end
   end
 
@@ -136,12 +136,12 @@ describe Mongoid::TaggableWithContext do
 
     it "should split with custom separator" do
       @m.tags = "some;other;separator"
-      @m.tags_array.should == %w[some other separator]
+      @m.tags.should == %w[some other separator]
     end
 
-    it "should join with custom separator" do
-      @m.tags_array = %w[some other sep]
-      @m.tags.should == "some;other;sep"
+    it "should join string with custom separator" do
+      @m.tags = %w[some other sep]
+      @m.tags_string.should == "some;other;sep"
     end
   end
   
@@ -258,10 +258,10 @@ describe Mongoid::TaggableWithContext do
           m2 = klass.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
           m3 = klass.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
           
-          m1.tags_array = m1.tags_array + %w[honey strip shoe]
+          m1.tags = m1.tags + %w[honey strip shoe]
           m1.save!
           
-          m3.artists_array = m3.artists_array + %w[grant greg gory]
+          m3.artists = m3.artists + %w[grant greg gory]
           m3.save!
         end
       
@@ -301,10 +301,10 @@ describe Mongoid::TaggableWithContext do
           m2 = klass.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
           m3 = klass.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
           
-          m1.tags_array = m1.tags_array + %w[honey strip shoe] - %w[food]
+          m1.tags = m1.tags + %w[honey strip shoe] - %w[food]
           m1.save!
           
-          m3.artists_array = m3.artists_array + %w[grant greg gory] - %w[andy]
+          m3.artists = m3.artists + %w[grant greg gory] - %w[andy]
           m3.save!
           
           m2.destroy
