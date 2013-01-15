@@ -110,17 +110,6 @@ describe Mongoid::TaggableWithContext do
     end
   end
 
-  context "saving tags from array using tags_array alias method" do
-    before :each do
-      @m = MyModel.new
-    end
-
-    it "should remove nil tags from array" do
-      @m.tags_array = ["some", nil, "new", nil, "tags"]
-      @m.tags_array.should == %w[some new tags]
-    end
-  end
-
   context "changing separator" do
     before :all do
       MyModel.tags_separator = ";"

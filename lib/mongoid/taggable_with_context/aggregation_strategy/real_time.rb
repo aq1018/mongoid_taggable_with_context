@@ -67,8 +67,8 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     
     protected
     
-    def update_tags_aggregation(context_array_field, old_tags=[], new_tags=[])
-      context = context_array_to_context_hash[context_array_field]
+    def update_tags_aggregation(database_field, old_tags=[], new_tags=[])
+      context = database_field_to_context_hash[database_field]
       coll = self.class.aggregation_database_collection_for(context)
 
       old_tags ||= []
@@ -90,19 +90,19 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     
     def update_tags_aggregations_on_save
       indifferent_changes = HashWithIndifferentAccess.new changes
-      tag_array_attributes.each do |context_array|
-        next if indifferent_changes[context_array].nil?
+      tag_database_fields.each do |field|
+        next if indifferent_changes[field].nil?
 
-        old_tags, new_tags = indifferent_changes[context_array]
-        update_tags_aggregation(context_array, old_tags, new_tags)
+        old_tags, new_tags = indifferent_changes[field]
+        update_tags_aggregation(field, old_tags, new_tags)
       end
     end
     
     def update_tags_aggregations_on_destroy
-      tag_array_attributes.each do |context_array|
-        old_tags = send context_array
+      tag_database_fields.each do |field|
+        old_tags = send field
         new_tags = []
-        update_tags_aggregation(context_array, old_tags, new_tags)
+        update_tags_aggregation(field, old_tags, new_tags)
       end      
     end
   end

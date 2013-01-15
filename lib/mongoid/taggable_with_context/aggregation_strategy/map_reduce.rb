@@ -33,7 +33,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     protected
 
     def changed_tag_arrays
-      tag_array_attributes & changes.keys.map(&:to_sym)
+      tag_database_fields & changes.keys.map(&:to_sym)
     end
     
     def tags_changed?
@@ -47,7 +47,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     end
     
     def map_reduce_context!(context)
-      field = tag_options_for(context)[:array_field]
+      field = tag_options_for(context)[:field]
 
       map = <<-END
         function() {

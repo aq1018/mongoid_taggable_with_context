@@ -7,9 +7,9 @@ module Mongoid::TaggableWithContext
 
   included do
     class_attribute :taggable_with_context_options
-    class_attribute :context_array_to_context_hash
+    class_attribute :database_field_to_context_hash
     self.taggable_with_context_options = {}
-    self.context_array_to_context_hash = {}
+    self.database_field_to_context_hash = {}
     delegate "convert_string_to_array",       :to => 'self.class'
     delegate "convert_array_to_string",       :to => 'self.class'
     delegate "clean_up_array",                :to => 'self.class'
@@ -17,8 +17,8 @@ module Mongoid::TaggableWithContext
     delegate "format_tags_for_write",         :to => 'self.class'
     delegate "tag_contexts",                  :to => 'self.class'
     delegate "tag_options_for",               :to => 'self.class'
-    delegate "tag_array_attributes",          :to => 'self.class'
-    delegate "context_array_to_context_hash", :to => 'self.class'
+    delegate "tag_database_fields",           :to => 'self.class'
+    delegate "database_field_to_context_hash", :to => 'self.class'
   end
 
   module ClassMethods
@@ -46,61 +46,58 @@ module Mongoid::TaggableWithContext
     def taggable(*args)
       # init variables
       options = args.extract_options!
-      tags_field = (args.blank? ? :tags : args.shift).to_sym
+      tags_name = (args.blank? ? :tags : args.shift).to_sym
       options.reverse_merge!(
         :separator => TAGGABLE_DEFAULT_SEPARATOR,
-        :string_field => "#{tags_field}_string".to_sym,
-        :array_field => tags_field
+        :string_method => "#{tags_name}_string".to_sym,
+        :field => tags_name
       )
+      database_field = options[:field]
 
       # register / update settings
-      self.taggable_with_context_options[tags_field] = options
-      self.context_array_to_context_hash[tags_field] = tags_field 
+      self.taggable_with_context_options[tags_name] = options
+      self.database_field_to_context_hash[database_field] = tags_name
 
       # setup fields & indexes
-      field tags_field, :type => Array, :default => options[:default]
-      # deprecated: index tags_field
-      # Invalid index specification on Category: tags_array, {}
+      field tags_name, :type => Array, :default => options[:default]
 
-      index({ tags_field => 1 }, { background: true })
+      index({ database_field => 1 }, { background: true })
 
       # singleton methods
       class_eval <<-END
         class << self
           # retrieve all tags ever created for the model
-          def #{tags_field}
-            tags_for(:"#{tags_field}")
+          def #{tags_name}
+            tags_for(:"#{tags_name}")
           end
 
           # retrieve all tags ever created for the model with weights
-          def #{tags_field}_with_weight
-            tags_with_weight_for(:"#{tags_field}")
+          def #{tags_name}_with_weight
+            tags_with_weight_for(:"#{tags_name}")
           end
 
-          def #{tags_field}_separator
-            get_tag_separator_for(:"#{tags_field}")
+          def #{tags_name}_separator
+            get_tag_separator_for(:"#{tags_name}")
           end
 
-          def #{tags_field}_separator=(value)
-            set_tag_separator_for(:"#{tags_field}", value)
+          def #{tags_name}_separator=(value)
+            set_tag_separator_for(:"#{tags_name}", value)
           end
 
-          def #{tags_field}_tagged_with(tags)
-            tagged_with(:"#{tags_field}", tags)
+          def #{tags_name}_tagged_with(tags)
+            tagged_with(:"#{tags_name}", tags)
           end
         end
       END
 
       # instance methods
       class_eval <<-END
-        def #{options[:string_field]}
-          convert_array_to_string(#{tags_field}, get_tag_separator_for(:"#{tags_field}"))
+        def #{options[:string_method]}
+          convert_array_to_string(#{database_field}, get_tag_separator_for(:"#{tags_name}"))
         end
-        def #{tags_field}=(value)
-          write_attribute(:#{tags_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_field}")))
+        def #{tags_name}=(value)
+          write_attribute(:#{database_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_name}")))
         end
-        alias_method :#{tags_field}_array=, :#{tags_field}=
-        alias_method :#{tags_field}_array, :#{tags_field}
       END
     end
 
@@ -108,9 +105,9 @@ module Mongoid::TaggableWithContext
       self.taggable_with_context_options.keys
     end
     
-    def tag_array_attributes
+    def tag_database_fields
       self.taggable_with_context_options.keys.map do |context|
-        tag_options_for(context)[:array_field]
+        tag_options_for(context)[:field]
       end
     end
 
@@ -147,8 +144,8 @@ module Mongoid::TaggableWithContext
     # @return [ Criteria ] A new criteria.
     def tagged_with(context, tags)
       tags = convert_string_to_array(tags, get_tag_separator_for(context)) if tags.is_a? String
-      array_field = tag_options_for(context)[:array_field]
-      all_in(array_field => tags)
+      database_field = tag_options_for(context)[:field]
+      all_in(database_field => tags)
     end
 
     # Helper method to convert a a tag input value of unknown type
