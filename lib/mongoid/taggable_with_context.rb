@@ -14,6 +14,7 @@ module Mongoid::TaggableWithContext
     delegate "convert_array_to_string",       :to => 'self.class'
     delegate "clean_up_array",                :to => 'self.class'
     delegate "get_tag_separator_for",         :to => 'self.class'
+    delegate "format_tags_for_write",         :to => 'self.class'
     delegate "tag_contexts",                  :to => 'self.class'
     delegate "tag_options_for",               :to => 'self.class'
     delegate "tag_array_attributes",          :to => 'self.class'
@@ -95,12 +96,10 @@ module Mongoid::TaggableWithContext
         def #{tags_field}
           convert_array_to_string(#{tags_array_field}, get_tag_separator_for(:"#{tags_field}"))
         end
-        def #{tags_field}=(s)
-          write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
+        def #{tags_field}=(value)
+          write_attribute(:#{tags_array_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_field}")))
         end
-        def #{tags_array_field}=(ary)
-          write_attribute(:#{tags_array_field}, clean_up_array(ary))
-        end
+        alias_method :#{tags_array_field}=, :#{tags_field}=
       END
     end
 
@@ -149,6 +148,16 @@ module Mongoid::TaggableWithContext
       tags = convert_string_to_array(tags, get_tag_separator_for(context)) if tags.is_a? String
       array_field = tag_options_for(context)[:array_field]
       all_in(array_field => tags)
+    end
+
+    # Helper method to convert a a tag input value of unknown type
+    # to a formatted array.
+    def format_tags_for_write(value, separator = TAGGABLE_DEFAULT_SEPARATOR)
+      if value.is_a? Array
+        clean_up_array(value)
+      else
+        convert_string_to_array(value, separator)
+      end
     end
 
     # Helper method to convert a String to an Array based on the
