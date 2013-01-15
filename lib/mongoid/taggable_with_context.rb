@@ -50,20 +50,19 @@ module Mongoid::TaggableWithContext
       options.reverse_merge!(
         :separator => TAGGABLE_DEFAULT_SEPARATOR,
         :string_field => "#{tags_field}_string".to_sym,
-        :array_field => "#{tags_field}_array".to_sym
+        :array_field => tags_field
       )
-      tags_array_field = options[:array_field]
 
       # register / update settings
       self.taggable_with_context_options[tags_field] = options
-      self.context_array_to_context_hash[options[:array_field]] = tags_field 
+      self.context_array_to_context_hash[tags_field] = tags_field 
 
       # setup fields & indexes
-      field tags_array_field, :type => Array, :default => options[:default]
-      # deprecated: index tags_array_field
+      field tags_field, :type => Array, :default => options[:default]
+      # deprecated: index tags_field
       # Invalid index specification on Category: tags_array, {}
 
-      index({ tags_array_field => 1 }, { background: true })
+      index({ tags_field => 1 }, { background: true })
 
       # singleton methods
       class_eval <<-END
@@ -94,16 +93,14 @@ module Mongoid::TaggableWithContext
 
       # instance methods
       class_eval <<-END
-        def #{tags_field}
-          #{tags_array_field}
-        end
         def #{options[:string_field]}
-          convert_array_to_string(#{tags_array_field}, get_tag_separator_for(:"#{tags_field}"))
+          convert_array_to_string(#{tags_field}, get_tag_separator_for(:"#{tags_field}"))
         end
         def #{tags_field}=(value)
-          write_attribute(:#{tags_array_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_field}")))
+          write_attribute(:#{tags_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_field}")))
         end
-        alias_method :#{tags_array_field}=, :#{tags_field}=
+        alias_method :#{tags_field}_array=, :#{tags_field}=
+        alias_method :#{tags_field}_array, :#{tags_field}
       END
     end
 
