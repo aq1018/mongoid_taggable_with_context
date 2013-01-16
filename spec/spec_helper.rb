@@ -17,5 +17,5 @@ RSpec.configure do |config|
 end
 
 Mongoid.configure do |config|
-  config.master = Mongo::Connection.new.db("mongoid_taggable_with_context_test")
+  config.connect_to("mongoid_taggable_with_context_test")
 end
