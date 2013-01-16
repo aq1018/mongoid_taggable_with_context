@@ -3,6 +3,8 @@ module Mongoid::TaggableWithContext
 
   class AggregationStrategyMissing < Exception; end
 
+  TAGGABLE_DEFAULT_SEPARATOR = ' '
+
   included do
     class_attribute :taggable_with_context_options
     class_attribute :context_array_to_context_hash
@@ -12,6 +14,7 @@ module Mongoid::TaggableWithContext
     delegate "convert_array_to_string",       :to => 'self.class'
     delegate "clean_up_array",                :to => 'self.class'
     delegate "get_tag_separator_for",         :to => 'self.class'
+    delegate "format_tags_for_write",         :to => 'self.class'
     delegate "tag_contexts",                  :to => 'self.class'
     delegate "tag_options_for",               :to => 'self.class'
     delegate "tag_array_attributes",          :to => 'self.class'
@@ -45,7 +48,7 @@ module Mongoid::TaggableWithContext
       options = args.extract_options!
       tags_field = (args.blank? ? :tags : args.shift).to_sym
       options.reverse_merge!(
-        :separator => ' ',
+        :separator => TAGGABLE_DEFAULT_SEPARATOR,
         :array_field => "#{tags_field}_array".to_sym
       )
       tags_array_field = options[:array_field]
@@ -93,12 +96,10 @@ module Mongoid::TaggableWithContext
         def #{tags_field}
           convert_array_to_string(#{tags_array_field}, get_tag_separator_for(:"#{tags_field}"))
         end
-        def #{tags_field}=(s)
-          write_attribute(:#{tags_array_field}, convert_string_to_array(s, get_tag_separator_for(:"#{tags_field}")))
+        def #{tags_field}=(value)
+          write_attribute(:#{tags_array_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_field}")))
         end
-        def #{tags_array_field}=(ary)
-          write_attribute(:#{tags_array_field}, clean_up_array(ary))
-        end
+        alias_method :#{tags_array_field}=, :#{tags_field}=
       END
     end
 
@@ -129,7 +130,7 @@ module Mongoid::TaggableWithContext
     end
 
     def set_tag_separator_for(context, value)
-      self.taggable_with_context_options[context][:separator] = value.nil? ? " " : value.to_s
+      self.taggable_with_context_options[context][:separator] = value.nil? ? TAGGABLE_DEFAULT_SEPARATOR : value.to_s
     end
 
     # Find documents tagged with all tags passed as a parameter, given
@@ -149,13 +150,23 @@ module Mongoid::TaggableWithContext
       all_in(array_field => tags)
     end
 
+    # Helper method to convert a a tag input value of unknown type
+    # to a formatted array.
+    def format_tags_for_write(value, separator = TAGGABLE_DEFAULT_SEPARATOR)
+      if value.is_a? Array
+        clean_up_array(value)
+      else
+        convert_string_to_array(value, separator)
+      end
+    end
+
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
-    def convert_string_to_array(str = "", separator = " ")
+    def convert_string_to_array(str = "", separator = TAGGABLE_DEFAULT_SEPARATOR)
       clean_up_array(str.split(separator))
     end
 
-    def convert_array_to_string(ary = [], separator = " ")
+    def convert_array_to_string(ary = [], separator = TAGGABLE_DEFAULT_SEPARATOR)
       #ary.join(separator)
       (ary || []).join(separator)
     end
