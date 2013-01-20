@@ -27,6 +27,15 @@ class M2
   taggable :artists
 end
 
+class M3
+  include Mongoid::Document
+  include Mongoid::TaggableWithContext::GroupBy::AggregationStrategy::RealTime
+
+  field :user
+  taggable :group_by_field => :user
+  taggable :artists, :group_by_field => :user
+end
+
 describe Mongoid::TaggableWithContext do
 
   context "default field value" do
@@ -170,12 +179,22 @@ describe Mongoid::TaggableWithContext do
   end
   
   shared_examples_for "aggregation" do
-    context "retriving index" do
+    context "retrieving index" do
+      context "when there's no tags'" do
+        it "should return an empty array" do
+          klass.tags.should == []
+          klass.artists.should == []
+
+          klass.tags_with_weight.should == []
+          klass.artists_with_weight == []
+        end
+      end
+
       context "on create directly" do
         before :each do
-          klass.create!(:tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          klass.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
-          klass.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
+          klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
+          klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
+          klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
         end
       
         it "should retrieve the list of all saved tags distinct and ordered" do
@@ -254,9 +273,9 @@ describe Mongoid::TaggableWithContext do
       
       context "on create then update" do
         before :each do
-          m1 = klass.create!(:tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          m2 = klass.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
-          m3 = klass.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
+          m1 = klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
+          m2 = klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
+          m3 = klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
           
           m1.tags_array = m1.tags_array + %w[honey strip shoe]
           m1.save!
@@ -297,9 +316,9 @@ describe Mongoid::TaggableWithContext do
 
       context "on create, update, then destroy" do
         before :each do
-          m1 = klass.create!(:tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          m2 = klass.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
-          m3 = klass.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
+          m1 = klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
+          m2 = klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
+          m3 = klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
           
           m1.tags_array = m1.tags_array + %w[honey strip shoe] - %w[food]
           m1.save!
@@ -362,6 +381,67 @@ describe Mongoid::TaggableWithContext do
     
     it "should generate the artists aggregation collection name correctly" do
       klass.aggregation_collection_for(:artists).should == "m2s_artists_aggregation"
+    end
+  end
+
+  context "realtime aggregation group by" do
+    let(:klass) { M3 }
+    it_should_behave_like "aggregation"
+
+    it "should generate the tags aggregation collection name correctly" do
+      klass.aggregation_collection_for(:tags).should == "m3s_tags_aggregation"
+    end
+
+    it "should generate the artists aggregation collection name correctly" do
+      klass.aggregation_collection_for(:artists).should == "m3s_artists_aggregation"
+    end
+
+    context "for groupings" do
+      before :each do
+        klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
+        klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
+        klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+      end
+
+      it "should retrieve the list of all saved tags distinct and ordered" do
+        klass.tags("user1").should == %w[ant bee food juice zip]
+        klass.tags("user2").should == %w[food honey strip]
+
+        klass.artists("user1").should == %w[aaron andrew andy grant greg jeff mandy]
+        klass.artists("user2").should == %w[aaron andy mandy]
+      end
+
+      it "should retrieve a list of tags with weight" do
+        klass.tags_with_weight("user1").should == [
+            ['ant', 1],
+            ['bee', 2],
+            ['food', 2],
+            ['juice', 1],
+            ['zip', 1]
+        ]
+
+        klass.tags_with_weight("user2").should == [
+            ['food', 1],
+            ['honey', 1],
+            ['strip', 1]
+        ]
+
+        klass.artists_with_weight("user1").should == [
+            ['aaron', 1],
+            ['andrew', 1],
+            ['andy', 2],
+            ['grant', 1],
+            ['greg', 1],
+            ['jeff', 1],
+            ['mandy', 1]
+        ]
+
+        klass.artists_with_weight("user2").should == [
+            ['aaron', 1],
+            ['andy', 1],
+            ['mandy', 1]
+        ]
+      end
     end
   end
 end

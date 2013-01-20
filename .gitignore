@@ -13,3 +13,4 @@ tmtags
 .\#*
 *.swp
 .idea
+.idea/*
