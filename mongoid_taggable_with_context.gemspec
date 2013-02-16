@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "mongoid_taggable_with_context"
-  s.version = "0.8.1.1"
+  s.version = "0.8.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Aaron Qian"]
-  s.date = "2012-03-14"
+  s.date = "2012-09-01"
   s.description = "It provides some helpers to create taggable documents with context."
   s.email = "aq1018@gmail.com"
   s.extra_rdoc_files = [
@@ -28,6 +28,8 @@ Gem::Specification.new do |s|
     "lib/mongoid/taggable_with_context.rb",
     "lib/mongoid/taggable_with_context/aggregation_strategy/map_reduce.rb",
     "lib/mongoid/taggable_with_context/aggregation_strategy/real_time.rb",
+    "lib/mongoid/taggable_with_context/group_by/aggregation_strategy/real_time.rb",
+    "lib/mongoid/taggable_with_context/group_by/taggable_with_context.rb",
     "lib/mongoid_taggable_with_context.rb",
     "mongoid_taggable_with_context.gemspec",
     "spec/mongoid_taggable_with_context_spec.rb",
@@ -36,7 +38,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/aq1018/mongoid_taggable_with_context"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.24"
   s.summary = "Mongoid taggable behaviour"
   s.test_files = [
     "spec/mongoid_taggable_with_context_spec.rb",
@@ -47,14 +49,14 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<mongoid>, [">= 3.0.1"])
+      s.add_runtime_dependency(%q<mongoid>, [">= 3.0.0"])
       s.add_development_dependency(%q<database_cleaner>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<yard>, [">= 0"])
       s.add_development_dependency(%q<bundler>, [">= 1.0.0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
-      s.add_dependency(%q<mongoid>, [">= 3.0.1"])
+      s.add_dependency(%q<mongoid>, [">= 3.0.0"])
       s.add_dependency(%q<database_cleaner>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<yard>, [">= 0"])
@@ -62,7 +64,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<jeweler>, [">= 0"])
     end
   else
-    s.add_dependency(%q<mongoid>, ["3.0.1"])
+    s.add_dependency(%q<mongoid>, [">= 3.0.0"])
     s.add_dependency(%q<database_cleaner>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<yard>, [">= 0"])

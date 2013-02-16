@@ -1,7 +1,7 @@
 mongoid_taggable_with_context
 =============================
 
-[![Build Status](https://secure.travis-ci.org/aq1018/mongoid_taggable_with_context.png?branch=master)](http://travis-ci.org/aq1018/mongoid_taggable_with_context) [![Dependency Status](https://gemnasium.com/aq1018/mongoid_taggable_with_context.png?travis)](https://gemnasium.com/aq1018/mongoid_taggable_with_context)
+[![Build Status](https://secure.travis-ci.org/lgs/mongoid_taggable_with_context.png?branch=master)](http://travis-ci.org/lgs/mongoid_taggable_with_context) [![Dependency Status](https://gemnasium.com/lgs/mongoid_taggable_with_context.png?travis)](https://gemnasium.com/lgs/mongoid_taggable_with_context)
 
 A tagging lib for Mongoid that allows for custom tagging along dynamic contexts. This gem was originally based on [mongoid_taggable](https://github.com/ches/mongoid_taggable) by Wilker Lúcio and Ches Martin. It has evolved substantially since that point, but all credit goes to them for the initial tagging functionality.
 
