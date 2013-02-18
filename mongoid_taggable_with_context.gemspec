@@ -5,13 +5,13 @@
 
 Gem::Specification.new do |s|
   s.name = "mongoid_taggable_with_context"
-  s.version = "1.0.0"
+  s.version = "1.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Aaron Qian"]
-  s.date = "2012-09-01"
+  s.authors = ["Aaron Qian"] #["Johnny Shields", "Steve Chung", "Luca G. Soave", "Aaron Qian"]
+  s.date = "2013-02-18"
   s.description = "It provides some helpers to create taggable documents with context."
-  s.email = "aq1018@gmail.com"
+  s.email = ["aq1018@gmail.com"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md"
@@ -35,7 +35,7 @@ Gem::Specification.new do |s|
     "spec/mongoid_taggable_with_context_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.homepage = "http://github.com/aq1018/mongoid_taggable_with_context"
+  s.homepage = "http://github.com/lgs/mongoid_taggable_with_context"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.24"
