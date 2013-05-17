@@ -30,7 +30,7 @@ module Mongoid::TaggableWithContext
     #   class Article
     #     include Mongoid::Document
     #     include Mongoid::Taggable
-    #     taggable :keywords, separator: ' ', aggregation: true, default_type: "seo"
+    #     taggable :keywords, separator: ' ', aggregation: true
     #   end
     #
     # @param [ Symbol ] field The name of the field for tags.
@@ -41,8 +41,6 @@ module Mongoid::TaggableWithContext
     # @option options [ true, false ] :aggregation Whether or not to
     #   aggregate counts of tags within the document collection using
     #   map/reduce; defaults to false
-    # @option options [ String ] :default_type The default type of the tag.
-    #   Each tag can optionally have a tag type. The default type is nil
     def taggable(*args)
       # init variables
       options = args.extract_options!
