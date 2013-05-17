@@ -6,7 +6,7 @@ class MyModel
     
   taggable
   taggable :artists
-  taggable :albums, :default => []
+  taggable :albums, default: []
 end
 
 class M1
@@ -32,8 +32,8 @@ class M3
   include Mongoid::TaggableWithContext::GroupBy::AggregationStrategy::RealTime
 
   field :user
-  taggable :group_by_field => :user
-  taggable :artists, :group_by_field => :user
+  taggable group_by_field: :user
+  taggable :artists, group_by_field: :user
 end
 
 describe Mongoid::TaggableWithContext do
@@ -376,6 +376,10 @@ describe Mongoid::TaggableWithContext do
   context "realtime aggregation group by" do
     let(:klass) { M3 }
     it_should_behave_like "aggregation"
+
+    it "should have artists_group_by_field value :user" do
+      klass.artists_group_by_field.should == :user
+    end
 
     it "should generate the tags aggregation collection name correctly" do
       klass.aggregation_collection_for(:tags).should == "m3s_tags_aggregation"

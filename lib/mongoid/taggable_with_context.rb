@@ -50,7 +50,7 @@ module Mongoid::TaggableWithContext
         string_method: "#{tags_name}_string".to_sym,
         field:         tags_name
       )
-      database_field = options[:field]
+      database_field = options[:field].to_sym
 
       # register / update settings
       self.taggable_with_context_options[tags_name] = options
@@ -62,41 +62,40 @@ module Mongoid::TaggableWithContext
       index({ database_field => 1 }, { background: true })
 
       # singleton methods
-      class_eval <<-END
-        class << self
-          # retrieve all tags ever created for the model
-          def #{tags_name}
-            tags_for(:"#{tags_name}")
-          end
-
-          # retrieve all tags ever created for the model with weights
-          def #{tags_name}_with_weight
-            tags_with_weight_for(:"#{tags_name}")
-          end
-
-          def #{tags_name}_separator
-            get_tag_separator_for(:"#{tags_name}")
-          end
-
-          def #{tags_name}_separator=(value)
-            set_tag_separator_for(:"#{tags_name}", value)
-          end
-
-          def #{tags_name}_tagged_with(tags)
-            tagged_with(:"#{tags_name}", tags)
-          end
+      self.class.class_eval do
+        # retrieve all tags ever created for the model
+        define_method tags_name do
+          tags_for(:"#{tags_name}")
         end
-      END
 
-      # instance methods
-      class_eval <<-END
-        def #{options[:string_method]}
-          convert_array_to_string(#{database_field}, get_tag_separator_for(:"#{tags_name}"))
+        # retrieve all tags ever created for the model with weights
+        define_method :"#{tags_name}_with_weight" do
+          tags_with_weight_for(:"#{tags_name}")
         end
-        def #{tags_name}=(value)
-          write_attribute(:#{database_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_name}")))
+
+        define_method :"#{tags_name}_separator" do
+          get_tag_separator_for(:"#{tags_name}")
         end
-      END
+
+        define_method :"#{tags_name}_separator=" do |value|
+          set_tag_separator_for(:"#{tags_name}", value)
+        end
+
+        define_method :"#{tags_name}_tagged_with" do |tags|
+          tagged_with(:"#{tags_name}", tags)
+        end
+      end
+
+      #instance methods
+      class_eval do
+        define_method options[:string_method].to_sym do
+          convert_array_to_string(read_attribute(database_field), get_tag_separator_for(tags_name))
+        end
+
+        define_method :"#{tags_name}=" do |value|
+          write_attribute(database_field, format_tags_for_write(value, get_tag_separator_for(tags_name)))
+        end
+      end
     end
 
     def tag_contexts
@@ -158,13 +157,12 @@ module Mongoid::TaggableWithContext
 
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
-    def convert_string_to_array(str = "", separator = TAGGABLE_DEFAULT_SEPARATOR)
+    def convert_string_to_array(str = '', separator = TAGGABLE_DEFAULT_SEPARATOR)
       clean_up_array(str.split(separator))
     end
 
     def convert_array_to_string(ary = [], separator = TAGGABLE_DEFAULT_SEPARATOR)
-      #ary.join(separator)
-      (ary || []).join(separator)
+      ary.join(separator)
     end
 
     def clean_up_array(ary = [])
