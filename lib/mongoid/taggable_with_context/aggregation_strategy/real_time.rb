@@ -23,13 +23,13 @@ module Mongoid::TaggableWithContext::AggregationStrategy
       end
 
       def tags_for(context, conditions={})
-        aggregation_database_collection_for(context).find({:value => {"$gt" => 0 }}).sort(tag_name_attribute.to_sym => 1).to_a.map{ |t| t[tag_name_attribute] }
+        aggregation_database_collection_for(context).find({value: {"$gt" => 0 }}).sort(tag_name_attribute.to_sym => 1).to_a.map{ |t| t[tag_name_attribute] }
       end
 
       # retrieve the list of tag with weight(count), this is useful for
       # creating tag clouds
       def tags_with_weight_for(context, conditions={})
-        aggregation_database_collection_for(context).find({:value => {"$gt" => 0 }}).sort(tag_name_attribute.to_sym => 1).to_a.map{ |t| [t[tag_name_attribute], t["value"].to_i] }
+        aggregation_database_collection_for(context).find({value: {"$gt" => 0 }}).sort(tag_name_attribute.to_sym => 1).to_a.map{ |t| [t[tag_name_attribute], t["value"].to_i] }
       end
 
       def recalculate_all_context_tag_weights!
@@ -87,10 +87,10 @@ module Mongoid::TaggableWithContext::AggregationStrategy
 
       
       tags_removed.each do |tag|
-        coll.find(get_conditions(context, tag)).upsert({'$inc' => {:value => -1}})
+        coll.find(get_conditions(context, tag)).upsert({'$inc' => {value: -1}})
       end
       tags_added.each do |tag|
-        coll.find(get_conditions(context, tag)).upsert({'$inc' => {:value => 1}})
+        coll.find(get_conditions(context, tag)).upsert({'$inc' => {value: 1}})
       end
       #coll.find({_id: {"$in" => tags_removed}}).update({'$inc' => {:value => -1}}, [:upsert])
       #coll.find({_id: {"$in" => tags_added}}).update({'$inc' => {:value => 1}}, [:upsert])

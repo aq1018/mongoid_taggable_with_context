@@ -145,9 +145,9 @@ describe Mongoid::TaggableWithContext do
   
   context "tagged_with" do
     before :each do
-      @m1 = MyModel.create!(:tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-      @m2 = MyModel.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
-      @m3 = MyModel.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
+      @m1 = MyModel.create!(tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+      @m2 = MyModel.create!(tags: "juice food bee zip", artists: "grant andrew andy")
+      @m3 = MyModel.create!(tags: "honey strip food", artists: "mandy aaron andy")
     end
     
     it "should retrieve a list of documents" do
@@ -181,9 +181,9 @@ describe Mongoid::TaggableWithContext do
 
       context "on create directly" do
         before :each do
-          klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-          klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+          klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+          klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+          klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
         end
       
         it "should retrieve the list of all saved tags distinct and ordered" do
@@ -262,9 +262,9 @@ describe Mongoid::TaggableWithContext do
       
       context "on create then update" do
         before :each do
-          m1 = klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          m2 = klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-          m3 = klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+          m1 = klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+          m2 = klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+          m3 = klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
           
           m1.tags = m1.tags + %w[honey strip shoe]
           m1.save!
@@ -305,9 +305,9 @@ describe Mongoid::TaggableWithContext do
 
       context "on create, update, then destroy" do
         before :each do
-          m1 = klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          m2 = klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-          m3 = klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+          m1 = klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+          m2 = klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+          m3 = klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
           
           m1.tags = m1.tags + %w[honey strip shoe] - %w[food]
           m1.save!
@@ -387,9 +387,9 @@ describe Mongoid::TaggableWithContext do
 
     context "for groupings" do
       before :each do
-        klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-        klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-        klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+        klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+        klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+        klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
       end
 
       it "should retrieve the list of all saved tags distinct and ordered" do

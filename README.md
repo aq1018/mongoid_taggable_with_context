@@ -52,12 +52,12 @@ class Post
   # tagging for 'interests' context.
   # This creates #interests, #interests=, #interests_string instance methods
   # The tags will be persisted in a database field called 'interest_array'
-  taggable :interests, :field => :interest_array
+  taggable :interests, field: :interest_array
 
   # tagging for 'skills' context.
   # This creates #skills, #skills=, #my_skill_list instance methods
   # changing tag separator to "," (Default is " ")
-  taggable :skills, :separator => ',', :string_method => :my_skill_list
+  taggable :skills, separator: ',', :string_method: :my_skill_list
 end
 ```
 
@@ -117,8 +117,8 @@ class Post
   field :content
 
   taggable
-  taggable :interests, :field => :interest_array
-  taggable :skills, :separator => ','
+  taggable :interests, field: :interest_array
+  taggable :skills, separator: ','
 end
 ```
 
@@ -137,9 +137,9 @@ Post.skills_with_weight
 Here is how to use these methods in more detail:
 
 ```ruby
-Post.create!(:tags => "food,ant,bee")
-Post.create!(:tags => "juice,food,bee,zip")
-Post.create!(:tags => "honey,strip,food")
+Post.create!(tags: "food,ant,bee")
+Post.create!(tags: "juice,food,bee,zip")
+Post.create!(tags: "honey,strip,food")
 
 Post.tags # will retrieve ["ant", "bee", "food", "honey", "juice", "strip", "zip"]
 Post.tags_with_weight # will retrieve:
@@ -167,7 +167,7 @@ class Post
   field :title
   field :content
 
-  taggable :separator => ','    # tags will be delineated by comma instead of space
+  taggable separator: ','  # tags will be delineated by comma instead of space
 end
 ```
 

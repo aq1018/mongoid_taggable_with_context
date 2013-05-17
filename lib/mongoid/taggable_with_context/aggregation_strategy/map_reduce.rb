@@ -2,9 +2,9 @@ module Mongoid::TaggableWithContext::AggregationStrategy
   module MapReduce
     extend ActiveSupport::Concern
     included do
-      set_callback :save,     :after, :map_reduce_all_contexts!, :if => :tags_changed?
+      set_callback :save,     :after, :map_reduce_all_contexts!, if: :tags_changed?
       set_callback :destroy,  :after, :map_reduce_all_contexts!
-      delegate :aggregation_collection_for, :to => "self.class"
+      delegate :aggregation_collection_for, to: "self.class"
     end
     
     module ClassMethods
@@ -19,13 +19,13 @@ module Mongoid::TaggableWithContext::AggregationStrategy
       end
 
       def tags_for(context, conditions={})
-        aggregation_database_collection_for(context).find({:value => {"$gt" => 0 }}).sort(_id: 1).to_a.map{ |t| t["_id"] }
+        aggregation_database_collection_for(context).find({value: {"$gt" => 0 }}).sort(_id: 1).to_a.map{ |t| t["_id"] }
       end
 
       # retrieve the list of tag with weight(count), this is useful for
       # creating tag clouds
       def tags_with_weight_for(context, conditions={})
-        aggregation_database_collection_for(context).find({:value => {"$gt" => 0 }}).sort(_id: 1).to_a.map{ |t| [t["_id"], t["value"].to_i] }
+        aggregation_database_collection_for(context).find({value: {"$gt" => 0 }}).sort(_id: 1).to_a.map{ |t| [t["_id"], t["value"].to_i] }
       end
       
     end

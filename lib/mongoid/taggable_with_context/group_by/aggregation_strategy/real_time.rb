@@ -35,7 +35,7 @@ module Mongoid::TaggableWithContext::GroupBy::AggregationStrategy
 
       protected
       def query(context, group_by)
-        aggregation_database_collection_for(context).find({:value => {"$gt" => 0 }, :group_by_field => group_by}).sort(tag_name_attribute.to_sym => 1)
+        aggregation_database_collection_for(context).find({value: {"$gt" => 0 }, group_by_field: group_by}).sort(tag_name_attribute.to_sym => 1)
       end
     end
 
@@ -45,7 +45,7 @@ module Mongoid::TaggableWithContext::GroupBy::AggregationStrategy
       conditions = {self.class.tag_name_attribute.to_sym => tag}
       group_by_field = self.class.get_tag_group_by_field_for(context)
       if group_by_field
-        conditions.merge!({:group_by_field => self.send(group_by_field)})
+        conditions.merge!({group_by_field: self.send(group_by_field)})
       end
       conditions
     end

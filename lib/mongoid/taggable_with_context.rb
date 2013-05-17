@@ -10,15 +10,15 @@ module Mongoid::TaggableWithContext
     class_attribute :database_field_to_context_hash
     self.taggable_with_context_options = {}
     self.database_field_to_context_hash = {}
-    delegate "convert_string_to_array",       :to => 'self.class'
-    delegate "convert_array_to_string",       :to => 'self.class'
-    delegate "clean_up_array",                :to => 'self.class'
-    delegate "get_tag_separator_for",         :to => 'self.class'
-    delegate "format_tags_for_write",         :to => 'self.class'
-    delegate "tag_contexts",                  :to => 'self.class'
-    delegate "tag_options_for",               :to => 'self.class'
-    delegate "tag_database_fields",           :to => 'self.class'
-    delegate "database_field_to_context_hash", :to => 'self.class'
+    delegate "convert_string_to_array",        to: 'self.class'
+    delegate "convert_array_to_string",        to: 'self.class'
+    delegate "clean_up_array",                 to: 'self.class'
+    delegate "get_tag_separator_for",          to: 'self.class'
+    delegate "format_tags_for_write",          to: 'self.class'
+    delegate "tag_contexts",                   to: 'self.class'
+    delegate "tag_options_for",                to: 'self.class'
+    delegate "tag_database_fields",            to: 'self.class'
+    delegate "database_field_to_context_hash", to: 'self.class'
   end
 
   module ClassMethods
@@ -30,7 +30,7 @@ module Mongoid::TaggableWithContext
     #   class Article
     #     include Mongoid::Document
     #     include Mongoid::Taggable
-    #     taggable :keywords, :separator => ' ', :aggregation => true, :default_type => "seo"
+    #     taggable :keywords, separator: ' ', aggregation: true, default_type: "seo"
     #   end
     #
     # @param [ Symbol ] field The name of the field for tags.
@@ -48,9 +48,9 @@ module Mongoid::TaggableWithContext
       options = args.extract_options!
       tags_name = (args.blank? ? :tags : args.shift).to_sym
       options.reverse_merge!(
-        :separator => TAGGABLE_DEFAULT_SEPARATOR,
-        :string_method => "#{tags_name}_string".to_sym,
-        :field => tags_name
+        separator:     TAGGABLE_DEFAULT_SEPARATOR,
+        string_method: "#{tags_name}_string".to_sym,
+        field:         tags_name
       )
       database_field = options[:field]
 
@@ -59,7 +59,7 @@ module Mongoid::TaggableWithContext
       self.database_field_to_context_hash[database_field] = tags_name
 
       # setup fields & indexes
-      field tags_name, :type => Array, :default => options[:default]
+      field tags_name, type: Array, default: options[:default]
 
       index({ database_field => 1 }, { background: true })
 

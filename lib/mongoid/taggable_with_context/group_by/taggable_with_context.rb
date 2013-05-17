@@ -8,7 +8,7 @@ module Mongoid::TaggableWithContext::GroupBy
         super(*args)
         args.extract_options!
         tags_field = (args.blank? ? :tags : args.shift).to_sym
-        self.taggable_with_context_options[tags_field].reverse_merge!(:group_by_field => nil)
+        self.taggable_with_context_options[tags_field].reverse_merge!(group_by_field: nil)
 
         class_eval <<-END
           class << self
