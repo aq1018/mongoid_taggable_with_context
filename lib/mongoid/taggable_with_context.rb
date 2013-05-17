@@ -57,7 +57,7 @@ module Mongoid::TaggableWithContext
       self.database_field_to_context_hash[database_field] = tags_name
 
       # setup fields & indexes
-      field tags_name, type: Array, default: options[:default]
+      field tags_name, mongoid_field_options(options)
 
       index({ database_field => 1 }, { background: true })
 
@@ -173,5 +173,11 @@ module Mongoid::TaggableWithContext
       ary.compact.map(&:strip).reject(&:blank?).uniq
     end
 
+    # Prepares valid Mongoid option keys from the taggable options
+    # @param [ Hash ] :options The taggable options hash.
+    # @return [ Hash ] A options hash for the Mongoid #field method.
+    def mongoid_field_options(options = {})
+      options.slice(*::Mongoid::Fields::Validators::Macro::OPTIONS).merge!(type: Array)
+    end
   end
 end
