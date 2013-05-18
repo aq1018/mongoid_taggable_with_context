@@ -2,6 +2,7 @@ module Mongoid::TaggableWithContext
   extend ActiveSupport::Concern
 
   class AggregationStrategyMissing < Exception; end
+  class InvalidTagsFormat < Exception; end
 
   DEFAULT_FIELD = :tags
   DEFAULT_SEPARATOR = ' '
@@ -9,18 +10,10 @@ module Mongoid::TaggableWithContext
   included do
     class_attribute :taggable_with_context_options
     self.taggable_with_context_options = {}
-    delegate 'convert_string_to_array',        to: 'self.class'
-    delegate 'convert_array_to_string',        to: 'self.class'
-    delegate 'clean_up_array',                 to: 'self.class'
-    delegate 'get_tag_separator_for',          to: 'self.class'
-    delegate 'format_tags_for_write',          to: 'self.class'
-    delegate 'tag_contexts',                   to: 'self.class'
-    delegate 'tag_options_for',                to: 'self.class'
-    delegate 'tag_database_fields',            to: 'self.class'
   end
 
   def tags_string_for(context)
-    convert_array_to_string(self.read_attribute(context), get_tag_separator_for(context))
+    self.read_attribute(context).join(self.class.get_tag_separator_for(context))
   end
 
   module ClassMethods
@@ -99,7 +92,7 @@ module Mongoid::TaggableWithContext
         end
 
         define_method :"#{options[:field]}=" do |value|
-          write_attribute(options[:field], format_tags_for_write(value, get_tag_separator_for(options[:field])))
+          write_attribute(options[:field], self.class.format_tags_for(options[:field], value))
         end
       end
     end
@@ -146,38 +139,26 @@ module Mongoid::TaggableWithContext
     # @param [ Array<String, Symbol>, String ] :tags Tags to match.
     # @return [ Criteria ] A new criteria.
     def tagged_with(context, tags)
-      tags = convert_string_to_array(tags, get_tag_separator_for(context)) if tags.is_a? String
+      tags = format_tags_for(context, tags)
       field = tag_options_for(context)[:field]
       all_in(field => tags)
     end
 
     # Helper method to convert a a tag input value of unknown type
     # to a formatted array.
-    def format_tags_for_write(value, separator = DEFAULT_SEPARATOR)
-      if value.is_a? Array
-        clean_up_array(value)
-      else
-        convert_string_to_array(value, separator)
-      end
+    def format_tags_for(context, value)
+      # 0) Tags must be an array or a string
+      raise InvalidTagsFormat unless value.is_a?(Array) || value.is_a?(String)
+      # 1) convert String to Array
+      value = value.split(get_tag_separator_for(context)) if value.is_a? String
+      # 2) remove all nil values
+      # 3) strip all white spaces. Could leave blank strings (e.g. foo, , bar, baz)
+      # 4) remove all blank strings
+      # 5) remove duplicate
+      value.compact.map(&:strip).reject(&:blank?).uniq
     end
 
-    # Helper method to convert a String to an Array based on the
-    # configured tag separator.
-    def convert_string_to_array(str = '', separator = DEFAULT_SEPARATOR)
-      clean_up_array(str.split(separator))
-    end
-
-    def convert_array_to_string(ary = [], separator = DEFAULT_SEPARATOR)
-      ary.join(separator)
-    end
-
-    def clean_up_array(ary = [])
-      # 0). remove all nil values
-      # 1). strip all white spaces. Could leave blank strings (e.g. foo, , bar, baz)
-      # 2). remove all blank strings
-      # 3). remove duplicate
-      ary.compact.map(&:strip).reject(&:blank?).uniq
-    end
+    protected
 
     # Prepares valid Mongoid option keys from the taggable options
     # @param [ Hash ] :options The taggable options hash.

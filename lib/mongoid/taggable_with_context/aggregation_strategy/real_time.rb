@@ -97,7 +97,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     
     def update_tags_aggregations_on_save
       indifferent_changes = HashWithIndifferentAccess.new changes
-      tag_database_fields.each do |field|
+      self.class.tag_database_fields.each do |field|
         next if indifferent_changes[field].nil?
 
         old_tags, new_tags = indifferent_changes[field]
@@ -106,7 +106,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     end
     
     def update_tags_aggregations_on_destroy
-      tag_database_fields.each do |field|
+      self.class.tag_database_fields.each do |field|
         old_tags = send field
         new_tags = []
         update_tags_aggregation(field, old_tags, new_tags)
