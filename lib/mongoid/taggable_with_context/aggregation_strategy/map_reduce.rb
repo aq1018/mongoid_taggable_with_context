@@ -47,13 +47,13 @@ module Mongoid::TaggableWithContext::AggregationStrategy
     end
     
     def map_reduce_context!(context)
-      field = tag_options_for(context)[:field]
+      db_field = tag_options_for(context)[:db_field]
 
       map = <<-END
         function() {
-          if (!this.#{field})return;
-          for (index in this.#{field})
-            emit(this.#{field}[index], 1);
+          if (!this.#{db_field})return;
+          for (index in this.#{db_field})
+            emit(this.#{db_field}[index], 1);
         }
       END
 

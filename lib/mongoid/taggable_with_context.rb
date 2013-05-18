@@ -3,22 +3,22 @@ module Mongoid::TaggableWithContext
 
   class AggregationStrategyMissing < Exception; end
 
-  TAGGABLE_DEFAULT_SEPARATOR = ' '
+  DEFAULT_SEPARATOR = ' '
 
   included do
     class_attribute :taggable_with_context_options
     class_attribute :database_field_to_context_hash
     self.taggable_with_context_options = {}
     self.database_field_to_context_hash = {}
-    delegate "convert_string_to_array",        to: 'self.class'
-    delegate "convert_array_to_string",        to: 'self.class'
-    delegate "clean_up_array",                 to: 'self.class'
-    delegate "get_tag_separator_for",          to: 'self.class'
-    delegate "format_tags_for_write",          to: 'self.class'
-    delegate "tag_contexts",                   to: 'self.class'
-    delegate "tag_options_for",                to: 'self.class'
-    delegate "tag_database_fields",            to: 'self.class'
-    delegate "database_field_to_context_hash", to: 'self.class'
+    delegate 'convert_string_to_array',        to: 'self.class'
+    delegate 'convert_array_to_string',        to: 'self.class'
+    delegate 'clean_up_array',                 to: 'self.class'
+    delegate 'get_tag_separator_for',          to: 'self.class'
+    delegate 'format_tags_for_write',          to: 'self.class'
+    delegate 'tag_contexts',                   to: 'self.class'
+    delegate 'tag_options_for',                to: 'self.class'
+    delegate 'tag_database_fields',            to: 'self.class'
+    delegate 'database_field_to_context_hash', to: 'self.class'
   end
 
   module ClassMethods
@@ -30,70 +30,79 @@ module Mongoid::TaggableWithContext
     #   class Article
     #     include Mongoid::Document
     #     include Mongoid::Taggable
-    #     taggable :keywords, separator: ' ', aggregation: true
+    #     taggable :keywords, separator: ' ', default: ['foobar']
     #   end
     #
     # @param [ Symbol ] field The name of the field for tags.
     # @param [ Hash ] options Options for taggable behavior.
     #
-    # @option options [ String ] :separator The tag separator to
-    #   convert from; defaults to ','
-    # @option options [ true, false ] :aggregation Whether or not to
-    #   aggregate counts of tags within the document collection using
-    #   map/reduce; defaults to false
+    # @option options [ String ] :separator
+    #   The tag separator to convert from. Defaults to ' '
+    # @option options [ Symbol ] :string_method
+    #   Method name to access tags as a string joined by the separator
+    # @option options [ <various> ] :default, :as, :localize, etc.
+    #   Options for Mongoid #field method will be automatically passed
+    #   to the underlying Array field
     def taggable(*args)
+
       # init variables
       options = args.extract_options!
-      tags_name = args.present? ? args.shift.to_sym : :tags
-      options.reverse_merge!(
-        separator:     TAGGABLE_DEFAULT_SEPARATOR,
-        string_method: "#{tags_name}_string".to_sym,
-        field:         tags_name
+      # db_field: the field name stored in the database
+      options.merge!(
+        db_field: args.present? ? args.shift.to_sym : :tags
       )
-      database_field = options[:field].to_sym
+      # field: the field name used to identify the tags. :field will
+      # be identical to :db_field unless the :as option is specified
+      options.merge!(
+        field: options[:as] || options[:db_field]
+      )
+      options.reverse_merge!(
+        separator:     DEFAULT_SEPARATOR,
+        string_method: "#{options[:field]}_string".to_sym,
+      )
 
       # register / update settings
-      self.taggable_with_context_options[tags_name] = options
-      self.database_field_to_context_hash[database_field] = tags_name
+      self.taggable_with_context_options[options[:field]] = options
+      self.database_field_to_context_hash[options[:field]] = options[:field]
 
       # setup fields & indexes
-      field tags_name, mongoid_field_options(options)
+      field options[:db_field], mongoid_field_options(options)
 
-      index({ database_field => 1 }, { background: true })
+      index({ options[:field] => 1 }, { background: true })
 
       # singleton methods
       self.class.class_eval do
         # retrieve all tags ever created for the model
-        define_method tags_name do
-          tags_for(:"#{tags_name}")
+        define_method options[:field] do
+          tags_for(options[:field])
         end
 
         # retrieve all tags ever created for the model with weights
-        define_method :"#{tags_name}_with_weight" do
-          tags_with_weight_for(:"#{tags_name}")
+        define_method :"#{options[:field]}_with_weight" do
+          tags_with_weight_for(options[:field])
         end
 
-        define_method :"#{tags_name}_separator" do
-          get_tag_separator_for(:"#{tags_name}")
+        define_method :"#{options[:field]}_separator" do
+          get_tag_separator_for(options[:field])
         end
 
-        define_method :"#{tags_name}_separator=" do |value|
-          set_tag_separator_for(:"#{tags_name}", value)
+        define_method :"#{options[:field]}_separator=" do |value|
+          set_tag_separator_for(options[:field], value)
         end
 
-        define_method :"#{tags_name}_tagged_with" do |tags|
-          tagged_with(:"#{tags_name}", tags)
+        define_method :"#{options[:field]}_tagged_with" do |tags|
+          tagged_with(options[:field], tags)
         end
       end
 
       #instance methods
       class_eval do
         define_method options[:string_method].to_sym do
-          convert_array_to_string(read_attribute(database_field), get_tag_separator_for(tags_name))
+          convert_array_to_string(read_attribute(options[:field]), get_tag_separator_for(options[:field]))
         end
 
-        define_method :"#{tags_name}=" do |value|
-          write_attribute(database_field, format_tags_for_write(value, get_tag_separator_for(tags_name)))
+        define_method :"#{options[:field]}=" do |value|
+          write_attribute(options[:field], format_tags_for_write(value, get_tag_separator_for(options[:field])))
         end
       end
     end
@@ -101,10 +110,10 @@ module Mongoid::TaggableWithContext
     def tag_contexts
       self.taggable_with_context_options.keys
     end
-    
+
     def tag_database_fields
       self.taggable_with_context_options.keys.map do |context|
-        tag_options_for(context)[:field]
+        tag_options_for(context)[:db_field]
       end
     end
 
@@ -125,7 +134,7 @@ module Mongoid::TaggableWithContext
     end
 
     def set_tag_separator_for(context, value)
-      self.taggable_with_context_options[context][:separator] = value.nil? ? TAGGABLE_DEFAULT_SEPARATOR : value.to_s
+      self.taggable_with_context_options[context][:separator] = value.nil? ? DEFAULT_SEPARATOR : value.to_s
     end
 
     # Find documents tagged with all tags passed as a parameter, given
@@ -141,13 +150,13 @@ module Mongoid::TaggableWithContext
     # @return [ Criteria ] A new criteria.
     def tagged_with(context, tags)
       tags = convert_string_to_array(tags, get_tag_separator_for(context)) if tags.is_a? String
-      database_field = tag_options_for(context)[:field]
-      all_in(database_field => tags)
+      field = tag_options_for(context)[:field]
+      all_in(field => tags)
     end
 
     # Helper method to convert a a tag input value of unknown type
     # to a formatted array.
-    def format_tags_for_write(value, separator = TAGGABLE_DEFAULT_SEPARATOR)
+    def format_tags_for_write(value, separator = DEFAULT_SEPARATOR)
       if value.is_a? Array
         clean_up_array(value)
       else
@@ -157,11 +166,11 @@ module Mongoid::TaggableWithContext
 
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
-    def convert_string_to_array(str = '', separator = TAGGABLE_DEFAULT_SEPARATOR)
+    def convert_string_to_array(str = '', separator = DEFAULT_SEPARATOR)
       clean_up_array(str.split(separator))
     end
 
-    def convert_array_to_string(ary = [], separator = TAGGABLE_DEFAULT_SEPARATOR)
+    def convert_array_to_string(ary = [], separator = DEFAULT_SEPARATOR)
       ary.join(separator)
     end
 

@@ -15,7 +15,7 @@ class M1
   include Mongoid::TaggableWithContext::AggregationStrategy::MapReduce
   
   taggable
-  taggable :artists
+  taggable :a, as: :artists
 end
 
 class M2
