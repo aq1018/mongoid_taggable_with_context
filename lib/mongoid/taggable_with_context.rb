@@ -19,6 +19,10 @@ module Mongoid::TaggableWithContext
     delegate 'tag_database_fields',            to: 'self.class'
   end
 
+  def tags_string_for(context)
+    convert_array_to_string(self.read_attribute(context), get_tag_separator_for(context))
+  end
+
   module ClassMethods
     # Macro to declare a document class as taggable, specify field name
     # for tags, and set options for tagging behavior.
@@ -36,15 +40,15 @@ module Mongoid::TaggableWithContext
     #
     # @option options [ String ] :separator
     #   The tag separator to convert from. Defaults to ' '
-    # @option options [ Symbol ] :string_method
-    #   Method name to access tags as a string joined by the separator
     # @option options [ <various> ] :default, :as, :localize, etc.
     #   Options for Mongoid #field method will be automatically passed
     #   to the underlying Array field
     def taggable(*args)
-
       # init variables
       options = args.extract_options!
+
+      raise 'taggable :field option has been removed as of version 1.1.0. Please use the syntax "taggable <database_name>, as: <tag_name>"' if options[:field]
+      raise 'taggable :string_method option has been removed as of version 1.1.0. Please define an alias to "<tags>_string"' if options[:string_method]
 
       # db_field: the field name stored in the database
       options[:db_field] = args.present? ? args.shift.to_sym : DEFAULT_FIELD
@@ -53,10 +57,7 @@ module Mongoid::TaggableWithContext
       # be identical to :db_field unless the :as option is specified
       options[:field] = options[:as] || options[:db_field]
 
-      options.reverse_merge!(
-        separator:     DEFAULT_SEPARATOR,
-        string_method: "#{options[:field]}_string".to_sym,
-      )
+      options.reverse_merge!(separator: DEFAULT_SEPARATOR)
 
       # register / update settings
       self.taggable_with_context_options[options[:field]] = options
@@ -93,8 +94,8 @@ module Mongoid::TaggableWithContext
 
       #instance methods
       class_eval do
-        define_method options[:string_method].to_sym do
-          convert_array_to_string(read_attribute(options[:field]), get_tag_separator_for(options[:field]))
+        define_method :"#{options[:field]}_string" do
+          tags_string_for(options[:field])
         end
 
         define_method :"#{options[:field]}=" do |value|

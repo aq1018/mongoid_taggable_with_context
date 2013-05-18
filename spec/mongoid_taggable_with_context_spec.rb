@@ -437,4 +437,25 @@ describe Mongoid::TaggableWithContext do
       end
     end
   end
+
+  context "removed options" do
+    it "should throw error if :field option is specified" do
+      expect do
+        class Invalid
+          include Mongoid::Document
+          include Mongoid::TaggableWithContext
+          taggable field: :foobar
+        end
+      end.to raise_error
+    end
+    it "should throw error if :string_method option is specified" do
+      expect do
+        class Invalid
+          include Mongoid::Document
+          include Mongoid::TaggableWithContext
+          taggable string_method: :foobar
+        end
+      end.to raise_error
+    end
+  end
 end

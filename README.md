@@ -61,12 +61,6 @@ Example:
         The tag separator to convert from. Defaults to " "
 
 
-    * `@option [ Symbol ] :string_method`
-
-        Method name to access tags as a string joined by the separator.
-        Defaults to "#{tag_field_name}_string" (e.g. "tags_string")
-
-
     * `@option [ <various> ] :default, :as, :localize, etc.`
 
         Options for Mongoid #field method will be automatically passed
@@ -97,9 +91,9 @@ class Post
   taggable
 
   # tagging for 'skills' context.
-  # This creates #skills, #skills=, #my_skill_list instance methods
+  # This creates #skills, #skills=, #skills_string instance methods
   # changing tag separator to "," (Default is " ")
-  taggable :skills, separator: ',', :string_method: :my_skill_list
+  taggable :skills, separator: ','
 
   # aliased context tagging.
   # This creates #interests, #interests=, #interests_string instance methods
