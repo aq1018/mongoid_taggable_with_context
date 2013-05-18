@@ -58,7 +58,7 @@ Example:
 
     * `@option [ String ] :separator`
 
-        The tag separator to convert from. Defaults to " "
+        The delimiter used when converting the tags to and from String format. Defaults to " "
 
 
     * `@option [ <various> ] :default, :as, :localize, etc.`

@@ -119,30 +119,6 @@ describe Mongoid::TaggableWithContext do
     end
   end
 
-  context "changing separator" do
-    before :all do
-      MyModel.tags_separator = ";"
-    end
-
-    after :all do
-      MyModel.tags_separator = " "
-    end
-
-    before :each do
-      @m = MyModel.new
-    end
-
-    it "should split with custom separator" do
-      @m.tags = "some;other;separator"
-      @m.tags.should == %w[some other separator]
-    end
-
-    it "should join string with custom separator" do
-      @m.tags = %w[some other sep]
-      @m.tags_string.should == "some;other;sep"
-    end
-  end
-  
   context "tagged_with" do
     before :each do
       @m1 = MyModel.create!(tags: "food ant bee", artists: "jeff greg mandy aaron andy")

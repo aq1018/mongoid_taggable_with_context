@@ -32,7 +32,7 @@ module Mongoid::TaggableWithContext
     # @param [ Hash ] options Options for taggable behavior.
     #
     # @option options [ String ] :separator
-    #   The tag separator to convert from. Defaults to ' '
+    #   The delimiter used when converting the tags to and from String format. Defaults to ' '
     # @option options [ <various> ] :default, :as, :localize, etc.
     #   Options for Mongoid #field method will be automatically passed
     #   to the underlying Array field
@@ -74,10 +74,6 @@ module Mongoid::TaggableWithContext
 
         define_method :"#{options[:field]}_separator" do
           get_tag_separator_for(options[:field])
-        end
-
-        define_method :"#{options[:field]}_separator=" do |value|
-          set_tag_separator_for(options[:field], value)
         end
 
         define_method :"#{options[:field]}_tagged_with" do |tags|
@@ -123,9 +119,6 @@ module Mongoid::TaggableWithContext
       self.taggable_with_context_options[context][:separator]
     end
 
-    def set_tag_separator_for(context, value)
-      self.taggable_with_context_options[context][:separator] = value.nil? ? DEFAULT_SEPARATOR : value.to_s
-    end
 
     # Find documents tagged with all tags passed as a parameter, given
     # as an Array or a String using the configured separator.
