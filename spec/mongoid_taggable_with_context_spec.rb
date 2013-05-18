@@ -6,7 +6,7 @@ class MyModel
     
   taggable
   taggable :artists
-  taggable :albums, :default => []
+  taggable :albums, default: []
 end
 
 class M1
@@ -15,7 +15,7 @@ class M1
   include Mongoid::TaggableWithContext::AggregationStrategy::MapReduce
   
   taggable
-  taggable :artists
+  taggable :a, as: :artists
 end
 
 class M2
@@ -32,8 +32,8 @@ class M3
   include Mongoid::TaggableWithContext::GroupBy::AggregationStrategy::RealTime
 
   field :user
-  taggable :group_by_field => :user
-  taggable :artists, :group_by_field => :user
+  taggable group_by_field: :user
+  taggable :artists, group_by_field: :user
 end
 
 describe Mongoid::TaggableWithContext do
@@ -119,35 +119,11 @@ describe Mongoid::TaggableWithContext do
     end
   end
 
-  context "changing separator" do
-    before :all do
-      MyModel.tags_separator = ";"
-    end
-
-    after :all do
-      MyModel.tags_separator = " "
-    end
-
-    before :each do
-      @m = MyModel.new
-    end
-
-    it "should split with custom separator" do
-      @m.tags = "some;other;separator"
-      @m.tags.should == %w[some other separator]
-    end
-
-    it "should join string with custom separator" do
-      @m.tags = %w[some other sep]
-      @m.tags_string.should == "some;other;sep"
-    end
-  end
-  
   context "tagged_with" do
     before :each do
-      @m1 = MyModel.create!(:tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-      @m2 = MyModel.create!(:tags => "juice food bee zip", :artists => "grant andrew andy")
-      @m3 = MyModel.create!(:tags => "honey strip food", :artists => "mandy aaron andy")
+      @m1 = MyModel.create!(tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+      @m2 = MyModel.create!(tags: "juice food bee zip", artists: "grant andrew andy")
+      @m3 = MyModel.create!(tags: "honey strip food", artists: "mandy aaron andy")
     end
     
     it "should retrieve a list of documents" do
@@ -181,9 +157,9 @@ describe Mongoid::TaggableWithContext do
 
       context "on create directly" do
         before :each do
-          klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-          klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+          klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+          klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+          klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
         end
       
         it "should retrieve the list of all saved tags distinct and ordered" do
@@ -262,9 +238,9 @@ describe Mongoid::TaggableWithContext do
       
       context "on create then update" do
         before :each do
-          m1 = klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          m2 = klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-          m3 = klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+          m1 = klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+          m2 = klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+          m3 = klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
           
           m1.tags = m1.tags + %w[honey strip shoe]
           m1.save!
@@ -305,9 +281,9 @@ describe Mongoid::TaggableWithContext do
 
       context "on create, update, then destroy" do
         before :each do
-          m1 = klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-          m2 = klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-          m3 = klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+          m1 = klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+          m2 = klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+          m3 = klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
           
           m1.tags = m1.tags + %w[honey strip shoe] - %w[food]
           m1.save!
@@ -377,6 +353,10 @@ describe Mongoid::TaggableWithContext do
     let(:klass) { M3 }
     it_should_behave_like "aggregation"
 
+    it "should have artists_group_by_field value :user" do
+      klass.artists_group_by_field.should == :user
+    end
+
     it "should generate the tags aggregation collection name correctly" do
       klass.aggregation_collection_for(:tags).should == "m3s_tags_aggregation"
     end
@@ -387,9 +367,9 @@ describe Mongoid::TaggableWithContext do
 
     context "for groupings" do
       before :each do
-        klass.create!(:user => "user1", :tags => "food ant bee", :artists => "jeff greg mandy aaron andy")
-        klass.create!(:user => "user1", :tags => "juice food bee zip", :artists => "grant andrew andy")
-        klass.create!(:user => "user2", :tags => "honey strip food", :artists => "mandy aaron andy")
+        klass.create!(user: "user1", tags: "food ant bee", artists: "jeff greg mandy aaron andy")
+        klass.create!(user: "user1", tags: "juice food bee zip", artists: "grant andrew andy")
+        klass.create!(user: "user2", tags: "honey strip food", artists: "mandy aaron andy")
       end
 
       it "should retrieve the list of all saved tags distinct and ordered" do
@@ -431,6 +411,27 @@ describe Mongoid::TaggableWithContext do
             ['mandy', 1]
         ]
       end
+    end
+  end
+
+  context "removed options" do
+    it "should throw error if :field option is specified" do
+      expect do
+        class Invalid
+          include Mongoid::Document
+          include Mongoid::TaggableWithContext
+          taggable field: :foobar
+        end
+      end.to raise_error
+    end
+    it "should throw error if :string_method option is specified" do
+      expect do
+        class Invalid
+          include Mongoid::Document
+          include Mongoid::TaggableWithContext
+          taggable string_method: :foobar
+        end
+      end.to raise_error
     end
   end
 end

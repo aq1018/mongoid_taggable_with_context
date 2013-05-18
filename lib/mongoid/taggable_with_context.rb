@@ -2,23 +2,18 @@ module Mongoid::TaggableWithContext
   extend ActiveSupport::Concern
 
   class AggregationStrategyMissing < Exception; end
+  class InvalidTagsFormat < Exception; end
 
-  TAGGABLE_DEFAULT_SEPARATOR = ' '
+  DEFAULT_FIELD = :tags
+  DEFAULT_SEPARATOR = ' '
 
   included do
     class_attribute :taggable_with_context_options
-    class_attribute :database_field_to_context_hash
     self.taggable_with_context_options = {}
-    self.database_field_to_context_hash = {}
-    delegate "convert_string_to_array",       :to => 'self.class'
-    delegate "convert_array_to_string",       :to => 'self.class'
-    delegate "clean_up_array",                :to => 'self.class'
-    delegate "get_tag_separator_for",         :to => 'self.class'
-    delegate "format_tags_for_write",         :to => 'self.class'
-    delegate "tag_contexts",                  :to => 'self.class'
-    delegate "tag_options_for",               :to => 'self.class'
-    delegate "tag_database_fields",           :to => 'self.class'
-    delegate "database_field_to_context_hash", :to => 'self.class'
+  end
+
+  def tags_string_for(context)
+    self.read_attribute(context).join(self.class.get_tag_separator_for(context))
   end
 
   module ClassMethods
@@ -29,85 +24,82 @@ module Mongoid::TaggableWithContext
     #
     #   class Article
     #     include Mongoid::Document
-    #     include Mongoid::Taggable
-    #     taggable :keywords, :separator => ' ', :aggregation => true, :default_type => "seo"
+    #     include Mongoid::TaggableWithContext
+    #     taggable :keywords, separator: ' ', default: ['foobar']
     #   end
     #
     # @param [ Symbol ] field The name of the field for tags.
     # @param [ Hash ] options Options for taggable behavior.
     #
-    # @option options [ String ] :separator The tag separator to
-    #   convert from; defaults to ','
-    # @option options [ true, false ] :aggregation Whether or not to
-    #   aggregate counts of tags within the document collection using
-    #   map/reduce; defaults to false
-    # @option options [ String ] :default_type The default type of the tag.
-    #   Each tag can optionally have a tag type. The default type is nil
+    # @option options [ String ] :separator
+    #   The delimiter used when converting the tags to and from String format. Defaults to ' '
+    # @option options [ <various> ] :default, :as, :localize, etc.
+    #   Options for Mongoid #field method will be automatically passed
+    #   to the underlying Array field
     def taggable(*args)
       # init variables
       options = args.extract_options!
-      tags_name = (args.blank? ? :tags : args.shift).to_sym
-      options.reverse_merge!(
-        :separator => TAGGABLE_DEFAULT_SEPARATOR,
-        :string_method => "#{tags_name}_string".to_sym,
-        :field => tags_name
-      )
-      database_field = options[:field]
+
+      raise 'taggable :field option has been removed as of version 1.1.0. Please use the syntax "taggable <database_name>, as: <tag_name>"' if options[:field]
+      raise 'taggable :string_method option has been removed as of version 1.1.0. Please define an alias to "<tags>_string"' if options[:string_method]
+
+      # db_field: the field name stored in the database
+      options[:db_field] = args.present? ? args.shift.to_sym : DEFAULT_FIELD
+
+      # field: the field name used to identify the tags. :field will
+      # be identical to :db_field unless the :as option is specified
+      options[:field] = options[:as] || options[:db_field]
+
+      options.reverse_merge!(separator: DEFAULT_SEPARATOR)
 
       # register / update settings
-      self.taggable_with_context_options[tags_name] = options
-      self.database_field_to_context_hash[database_field] = tags_name
+      self.taggable_with_context_options[options[:field]] = options
 
       # setup fields & indexes
-      field tags_name, :type => Array, :default => options[:default]
+      field options[:db_field], mongoid_field_options(options)
 
-      index({ database_field => 1 }, { background: true })
+      index({ options[:field] => 1 }, { background: true })
 
       # singleton methods
-      class_eval <<-END
-        class << self
-          # retrieve all tags ever created for the model
-          def #{tags_name}
-            tags_for(:"#{tags_name}")
-          end
-
-          # retrieve all tags ever created for the model with weights
-          def #{tags_name}_with_weight
-            tags_with_weight_for(:"#{tags_name}")
-          end
-
-          def #{tags_name}_separator
-            get_tag_separator_for(:"#{tags_name}")
-          end
-
-          def #{tags_name}_separator=(value)
-            set_tag_separator_for(:"#{tags_name}", value)
-          end
-
-          def #{tags_name}_tagged_with(tags)
-            tagged_with(:"#{tags_name}", tags)
-          end
+      self.class.class_eval do
+        # retrieve all tags ever created for the model
+        define_method options[:field] do
+          tags_for(options[:field])
         end
-      END
 
-      # instance methods
-      class_eval <<-END
-        def #{options[:string_method]}
-          convert_array_to_string(#{database_field}, get_tag_separator_for(:"#{tags_name}"))
+        # retrieve all tags ever created for the model with weights
+        define_method :"#{options[:field]}_with_weight" do
+          tags_with_weight_for(options[:field])
         end
-        def #{tags_name}=(value)
-          write_attribute(:#{database_field}, format_tags_for_write(value, get_tag_separator_for(:"#{tags_name}")))
+
+        define_method :"#{options[:field]}_separator" do
+          get_tag_separator_for(options[:field])
         end
-      END
+
+        define_method :"#{options[:field]}_tagged_with" do |tags|
+          tagged_with(options[:field], tags)
+        end
+      end
+
+      #instance methods
+      class_eval do
+        define_method :"#{options[:field]}_string" do
+          tags_string_for(options[:field])
+        end
+
+        define_method :"#{options[:field]}=" do |value|
+          write_attribute(options[:field], self.class.format_tags_for(options[:field], value))
+        end
+      end
     end
 
     def tag_contexts
       self.taggable_with_context_options.keys
     end
-    
+
     def tag_database_fields
       self.taggable_with_context_options.keys.map do |context|
-        tag_options_for(context)[:field]
+        tag_options_for(context)[:db_field]
       end
     end
 
@@ -127,9 +119,6 @@ module Mongoid::TaggableWithContext
       self.taggable_with_context_options[context][:separator]
     end
 
-    def set_tag_separator_for(context, value)
-      self.taggable_with_context_options[context][:separator] = value.nil? ? TAGGABLE_DEFAULT_SEPARATOR : value.to_s
-    end
 
     # Find documents tagged with all tags passed as a parameter, given
     # as an Array or a String using the configured separator.
@@ -143,39 +132,32 @@ module Mongoid::TaggableWithContext
     # @param [ Array<String, Symbol>, String ] :tags Tags to match.
     # @return [ Criteria ] A new criteria.
     def tagged_with(context, tags)
-      tags = convert_string_to_array(tags, get_tag_separator_for(context)) if tags.is_a? String
-      database_field = tag_options_for(context)[:field]
-      all_in(database_field => tags)
+      tags = format_tags_for(context, tags)
+      field = tag_options_for(context)[:field]
+      all_in(field => tags)
     end
 
     # Helper method to convert a a tag input value of unknown type
     # to a formatted array.
-    def format_tags_for_write(value, separator = TAGGABLE_DEFAULT_SEPARATOR)
-      if value.is_a? Array
-        clean_up_array(value)
-      else
-        convert_string_to_array(value, separator)
-      end
+    def format_tags_for(context, value)
+      # 0) Tags must be an array or a string
+      raise InvalidTagsFormat unless value.is_a?(Array) || value.is_a?(String)
+      # 1) convert String to Array
+      value = value.split(get_tag_separator_for(context)) if value.is_a? String
+      # 2) remove all nil values
+      # 3) strip all white spaces. Could leave blank strings (e.g. foo, , bar, baz)
+      # 4) remove all blank strings
+      # 5) remove duplicate
+      value.compact.map(&:strip).reject(&:blank?).uniq
     end
 
-    # Helper method to convert a String to an Array based on the
-    # configured tag separator.
-    def convert_string_to_array(str = "", separator = TAGGABLE_DEFAULT_SEPARATOR)
-      clean_up_array(str.split(separator))
-    end
+    protected
 
-    def convert_array_to_string(ary = [], separator = TAGGABLE_DEFAULT_SEPARATOR)
-      #ary.join(separator)
-      (ary || []).join(separator)
+    # Prepares valid Mongoid option keys from the taggable options
+    # @param [ Hash ] :options The taggable options hash.
+    # @return [ Hash ] A options hash for the Mongoid #field method.
+    def mongoid_field_options(options = {})
+      options.slice(*::Mongoid::Fields::Validators::Macro::OPTIONS).merge!(type: Array)
     end
-
-    def clean_up_array(ary = [])
-      # 0). remove all nil values
-      # 1). strip all white spaces. Could leave blank strings (e.g. foo, , bar, baz)
-      # 2). remove all blank strings
-      # 3). remove duplicate
-      ary.compact.map(&:strip).reject(&:blank?).uniq
-    end
-
   end
 end

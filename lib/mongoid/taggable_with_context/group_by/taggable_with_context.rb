@@ -7,24 +7,23 @@ module Mongoid::TaggableWithContext::GroupBy
       def taggable(*args)
         super(*args)
         args.extract_options!
-        tags_field = (args.blank? ? :tags : args.shift).to_sym
-        self.taggable_with_context_options[tags_field].reverse_merge!(:group_by_field => nil)
+        tags_field = args.present? ? args.shift.to_sym : :tags
+        self.taggable_with_context_options[tags_field].reverse_merge!(group_by_field: nil)
 
-        class_eval <<-END
-          class << self
-            def #{tags_field}(group_by=nil)
-              tags_for(:"#{tags_field}", group_by)
-            end
-
-            def #{tags_field}_with_weight(group_by=nil)
-              tags_with_weight_for(:"#{tags_field}", group_by)
-            end
-
-            def #{tags_field}_group_by_field
-              get_tag_group_by_field_for(:"#{tags_field}")
-            end
+        # singleton methods
+        self.class.class_eval do
+          define_method tags_field do |group_by = nil|
+            tags_for(tags_field, group_by)
           end
-        END
+
+          define_method :"#{tags_field}_with_weight" do |group_by = nil|
+            tags_with_weight_for(tags_field, group_by)
+          end
+
+          define_method :"#{tags_field}_group_by_field" do
+            get_tag_group_by_field_for(tags_field)
+          end
+        end
       end
 
       def tags_for(context, group_by, conditions={})

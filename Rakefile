@@ -1,23 +1,21 @@
 require 'rubygems'
 require 'bundler'
-begin
-  Bundler.setup(:default, :development)
-rescue Bundler::BundlerError => e
-  $stderr.puts e.message
-  $stderr.puts "Run `bundle install` to install missing gems"
-  exit e.status_code
-end
-require 'rake'
+Bundler.setup
 
+require 'rake'
 require 'jeweler'
+
+$LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
+require 'mongoid/taggable_with_context/version'
+
 Jeweler::Tasks.new do |gem|
   gem.name = "mongoid_taggable_with_context"
-  gem.homepage = "http://github.com/aq1018/mongoid_taggable_with_context"
+  gem.homepage = "http://github.com/lgs/mongoid_taggable_with_context"
   gem.license = "MIT"
   gem.summary = %Q{Mongoid taggable behaviour}
-  gem.description = %Q{It provides some helpers to create taggable documents with context.}
-  gem.email = "aq1018@gmail.com"
-  gem.authors = ["Aaron Qian"]
+  gem.description = %Q{Add multiple tag fields on Mongoid documents with aggregation capability.}
+  gem.authors = ["Aaron Qian", "Luca G. Soave", "John Shields", "Wilker Lucio", "Ches Martin"]
+  gem.version = Mongoid::TaggableWithContext::VERSION
 end
 Jeweler::RubygemsDotOrgTasks.new
 
@@ -28,7 +26,7 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.rspec_opts = "--color --format progress"
 end
 
-task :default => :spec
+task default: :spec
 
 require 'yard'
 YARD::Rake::YardocTask.new
