@@ -28,10 +28,57 @@ or in Gemfile:
 gem 'mongoid_taggable_with_context'
 ```
 
-Basic Usage
------------
 
-To make a document taggable you need to include Mongoid::TaggableOnContext into your document and call the *taggable* macro with optional arguments:
+The "taggable" Macro Function
+-----------------------------
+
+Use the `taggable` macro function in your model to
+declare a tags field. Specify `field name`
+for tags, and `options` for tagging behavior.
+
+Example:
+
+   ```ruby
+   class Article
+     include Mongoid::Document
+     include Mongoid::Taggable
+     taggable :keywords, separator: ' ', default: ['foobar']
+   end
+   ```
+
+* `@param [ Symbol ] field`
+
+   (Optional) The name of the field for tags. Defaults to "tags"
+
+
+* `@param [ Hash ] options`
+
+   (Optional) Options for taggable behavior.
+
+
+    * `@option [ String ] :separator`
+
+        The tag separator to convert from. Defaults to " "
+
+
+    * `@option [ Symbol ] :string_method`
+
+        Method name to access tags as a string joined by the separator.
+        Defaults to "#{tag_field_name}_string" (e.g. "tags_string")
+
+
+    * `@option [ <various> ] :default, :as, :localize, etc.`
+
+        Options for Mongoid #field method will be automatically passed
+        to the underlying Array field (with the exception of `:type`,
+        which is coerced to `Array`).
+
+
+Example Usage
+-------------
+
+To make a document taggable you need to include Mongoid::TaggableOnContext
+into your document and call the *taggable* macro with optional arguments:
 
 ```ruby
 class Post
@@ -49,15 +96,15 @@ class Post
   # #tags_string method returns a separated string
   taggable
 
-  # tagging for 'interests' context.
-  # This creates #interests, #interests=, #interests_string instance methods
-  # The tags will be persisted in a database field called 'interest_array'
-  taggable :interests, field: :interest_array
-
   # tagging for 'skills' context.
   # This creates #skills, #skills=, #my_skill_list instance methods
   # changing tag separator to "," (Default is " ")
   taggable :skills, separator: ',', :string_method: :my_skill_list
+
+  # aliased context tagging.
+  # This creates #interests, #interests=, #interests_string instance methods
+  # The tags will be stored in a database field called 'ints'
+  taggable :ints, as: :interests
 end
 ```
 
@@ -91,6 +138,7 @@ Then in your form, for example:
 <% end %>
 ```
 
+
 Aggregation Strategies
 ----------------------
 
@@ -117,8 +165,8 @@ class Post
   field :content
 
   taggable
-  taggable :interests, field: :interest_array
   taggable :skills, separator: ','
+  taggable :ints, as: interests
 end
 ```
 
@@ -154,22 +202,6 @@ Post.tags_with_weight # will retrieve:
 # ]
 ```
 
-Changing default separator
---------------------------
-
-To change the default separator you may pass a *separator* argument to the macro:
-
-```ruby
-class Post
-  include Mongoid::Document
-  include Mongoid::TaggableWithContext
-
-  field :title
-  field :content
-
-  taggable separator: ','  # tags will be delineated by comma instead of space
-end
-```
 
 Contributing to mongoid_taggable_with_context
 -----------------------------------------------
@@ -181,6 +213,7 @@ Contributing to mongoid_taggable_with_context
 * Commit and push until you are happy with your contribution
 * Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
 * Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+
 
 Copyright
 ---------
