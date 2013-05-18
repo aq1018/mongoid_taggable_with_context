@@ -44,7 +44,7 @@ module Mongoid::TaggableWithContext
     def taggable(*args)
       # init variables
       options = args.extract_options!
-      tags_name = (args.blank? ? :tags : args.shift).to_sym
+      tags_name = args.present? ? args.shift.to_sym : :tags
       options.reverse_merge!(
         separator:     TAGGABLE_DEFAULT_SEPARATOR,
         string_method: "#{tags_name}_string".to_sym,
