@@ -44,15 +44,14 @@ module Mongoid::TaggableWithContext
 
       # init variables
       options = args.extract_options!
+
       # db_field: the field name stored in the database
-      options.merge!(
-        db_field: args.present? ? args.shift.to_sym : :tags
-      )
+      options[:db_field] = args.present? ? args.shift.to_sym : :tags
+
       # field: the field name used to identify the tags. :field will
       # be identical to :db_field unless the :as option is specified
-      options.merge!(
-        field: options[:as] || options[:db_field]
-      )
+      options[:field] = options[:as] || options[:db_field]
+
       options.reverse_merge!(
         separator:     DEFAULT_SEPARATOR,
         string_method: "#{options[:field]}_string".to_sym,
