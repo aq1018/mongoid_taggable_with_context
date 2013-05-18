@@ -75,8 +75,7 @@ module Mongoid::TaggableWithContext::AggregationStrategy
       {self.class.tag_name_attribute.to_sym => tag}
     end
     
-    def update_tags_aggregation(database_field, old_tags=[], new_tags=[])
-      context = database_field_to_context_hash[database_field]
+    def update_tags_aggregation(context, old_tags=[], new_tags=[])
       coll = self.class.aggregation_database_collection_for(context)
 
       old_tags ||= []

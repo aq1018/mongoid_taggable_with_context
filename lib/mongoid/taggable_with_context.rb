@@ -7,9 +7,7 @@ module Mongoid::TaggableWithContext
 
   included do
     class_attribute :taggable_with_context_options
-    class_attribute :database_field_to_context_hash
     self.taggable_with_context_options = {}
-    self.database_field_to_context_hash = {}
     delegate 'convert_string_to_array',        to: 'self.class'
     delegate 'convert_array_to_string',        to: 'self.class'
     delegate 'clean_up_array',                 to: 'self.class'
@@ -18,7 +16,6 @@ module Mongoid::TaggableWithContext
     delegate 'tag_contexts',                   to: 'self.class'
     delegate 'tag_options_for',                to: 'self.class'
     delegate 'tag_database_fields',            to: 'self.class'
-    delegate 'database_field_to_context_hash', to: 'self.class'
   end
 
   module ClassMethods
@@ -63,7 +60,6 @@ module Mongoid::TaggableWithContext
 
       # register / update settings
       self.taggable_with_context_options[options[:field]] = options
-      self.database_field_to_context_hash[options[:field]] = options[:field]
 
       # setup fields & indexes
       field options[:db_field], mongoid_field_options(options)
