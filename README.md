@@ -41,7 +41,7 @@ Example:
    ```ruby
    class Article
      include Mongoid::Document
-     include Mongoid::Taggable
+     include Mongoid::TaggableWithContext
      taggable :keywords, separator: ' ', default: ['foobar']
    end
    ```
