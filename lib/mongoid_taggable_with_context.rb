@@ -5,3 +5,4 @@ require File.join(File.dirname(__FILE__), 'mongoid/taggable_with_context/aggrega
 require File.join(File.dirname(__FILE__), 'mongoid/taggable_with_context/aggregation_strategy/real_time')
 require File.join(File.dirname(__FILE__), 'mongoid/taggable_with_context/group_by/taggable_with_context')
 require File.join(File.dirname(__FILE__), 'mongoid/taggable_with_context/group_by/aggregation_strategy/real_time')
+require File.join(File.dirname(__FILE__), 'mongoid/taggable_with_context/version')
